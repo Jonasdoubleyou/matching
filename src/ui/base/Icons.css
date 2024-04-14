@@ -1,0 +1,31 @@
+.icon-button {
+    all: unset;
+    cursor: pointer;
+    background-color: var(--primary);
+    color: var(--secondary);
+    padding: 10px;
+    margin: 0;
+
+    display: flex;
+    flex-direction: row;
+  }
+
+  .icon-button:disabled {
+    background-color: darkgrey;
+  }
+
+  .icon-button_small {
+    padding: 5px;
+    margin: 1px;
+  }
+  .icon-button_small > .material-symbols-outlined {
+    font-size: 15px;
+  }
+
+  .icon-button_highlight {
+    background-color: var(--highlight);
+  }
+
+  .icon-button-text {
+    padding: 0 10px;
+  }

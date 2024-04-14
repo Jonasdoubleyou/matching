@@ -1,0 +1,27 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined');
+
+:root {
+    --secondary: #000000;
+    --primary: #ffffff;
+}
+
+body {
+  margin: 0;
+  font-family: 'Noto Sans';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  background-color: black;
+  color: white;
+  text-align: center;
+}
+
+button {
+    all: unset;
+    cursor: pointer;
+    background-color: white;
+    color: black;
+    padding: 15px 50px;
+    font-weight: bold;
+}
