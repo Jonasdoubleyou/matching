@@ -36,6 +36,16 @@ export interface ReadonlyGraph<Node = NodeBase, Edge = EdgeBase<Node>> {
     edges: readonly Readonly<Edge>[];
 }
 
+export type EdgeID = string;
+export function edgeID(edge: EdgeBase): EdgeID {
+    return `${nodeID(edge.from)}/${nodeID(edge.to)}`;
+}
+
+export type NodeID = string;
+export function nodeID(node: NodeBase): NodeID {
+    return `${node.id}`;
+}
+
 // ----------------- Matching Algorithm -------------
 
 export type Color = "blue" | "green" | "red";

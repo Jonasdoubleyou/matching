@@ -5,8 +5,8 @@ import { Select } from './base/Select';
 import { Mission, missions } from '../test/missions';
 import { Column, Row, Spacer } from './base/Layout';
 import { CancellationToken, Matcher, MatcherName, Matching, RunResult, Visualizer, getScore, matcherNames, matchers, runAsync } from '../algo';
-import { VisualizeUI, useVisualizer } from './Visualizer';
-import { GraphUI } from './Graph';
+import { StateUI, VisualizeContext, useVisualizer } from './Visualizer';
+import { GraphUI } from './graph/Graph';
 
 function Start({ startRun }: { startRun: (matcher: MatcherName, mission: Mission) => void }) {
     const [mission, setMission] = useState<Mission>();
@@ -125,14 +125,16 @@ function RunUI({ run, exit }: { run: MatchRun, exit: () => void }) {
         </Row>
         <Row>
             <Spacer />
-            <Column grow>
-                <h2>Graph</h2>
-                <GraphUI graph={run.mission.input} />
-            </Column>
-            <Column grow>
-                <h2>State</h2>
-                {currentState && <VisualizeUI state={currentState} />}
-            </Column>
+            <VisualizeContext state={currentState}>
+                <Column grow>
+                    <h2>Graph</h2>
+                    <GraphUI graph={run.mission.input} />
+                </Column>
+                <Column grow>
+                    <h2>State</h2>
+                    <StateUI />
+                </Column>
+            </VisualizeContext>     
             <Spacer />
         </Row>
         

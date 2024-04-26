@@ -1,51 +1,27 @@
 import { ReactElement, createContext, useContext, useMemo, useRef, useState } from "react";
-import { Color, EdgeBase, NodeBase, Visualizer, isEdge, isNode } from "../algo";
+import { Color, EdgeBase, EdgeID, NodeBase, Visualizer, edgeID, isEdge, isNode, nodeID } from "../algo";
+import { ColoringContext, ColoringCtx, emptyColoringContext } from "./Coloring";
+import { StandaloneNodeUI } from "./graph/StandaloneNode";
+import { StandaloneEdgeUI } from "./graph/StandaloneEdge";
 
 import "./Visualizer.css";
 
 type DataMap = Map<string, any>;
 
-type EdgeID = string;
-function edgeID(edge: EdgeBase): EdgeID {
-    return `${nodeID(edge.from)}/${nodeID(edge.to)}`;
-}
-
-type NodeID = string;
-function nodeID(node: NodeBase): NodeID {
-    return `${node.id}`;
-}
-
-interface VisualizerState {
-    coloredEdges: Map<EdgeID, Color>;
-    coloredNodes: Map<NodeID, Color>;
-    
-    currentEdge?: EdgeID;
-    currentNode?: NodeID;
-
+interface DataContext {
     step?: string;
     message?: string;
 
     data: DataMap;
 }
 
-const VisualizerStateContext = createContext<VisualizerState>({
-    coloredEdges: new Map(),
-    coloredNodes: new Map(),
+const emptyDataContext = {
     data: new Map()
-});
+};
 
-const useStateContext = () => useContext(VisualizerStateContext);
-const useEdgeColor = (edge: EdgeBase) => {
-    const ctx = useStateContext();
-    if (ctx.currentEdge === edgeID(edge)) return "lightgreen";
-    return ctx.coloredEdges.get(edgeID(edge)) ?? "white";
-}
+const DataCtx = createContext<DataContext>(emptyDataContext);
 
-const useNodeColor = (node: NodeBase) => {
-    const ctx = useStateContext();
-    if (ctx.currentNode === nodeID(node)) return "lightgreen";
-    return ctx.coloredNodes.get(nodeID(node)) ?? "white";
-}
+interface VisualizerState extends ColoringContext, DataContext {}
 
 const MAX_UNDO_STATES = 10;
 
@@ -146,37 +122,15 @@ function EmptySet() {
     </div>
 }
 
-function NodeUI({ node }: { node: NodeBase }) {
-    const color = useNodeColor(node);
 
-    return <div className="data-node" style={{ color, borderColor: color }}>
-        {node.id}
-    </div>;
-}
 
-function EdgeUI({ edge }: { edge: EdgeBase }) {
-    const color = useEdgeColor(edge);
-    const style = { color, borderColor: color };
-
-    return <div className="data-edge" style={style}>
-            <div className="data-edge-node" style={style}>
-                {edge.from.id}
-            </div>
-            <div className="data-edge-arrow" style={style}>
-                {edge.weight}
-            </div>
-            <div className="data-edge-node" style={style}>
-                {edge.to.id}
-            </div>
-    </div>;
-}
 function visualizeValue(value: any) {
     if (isNode(value)) {
-        return <NodeUI node={value} />
+        return <StandaloneNodeUI node={value} />
     }
 
     if (isEdge(value)) {
-        return <EdgeUI edge={value} />
+        return <StandaloneEdgeUI edge={value} />
     }
 
     return value;
@@ -216,10 +170,20 @@ function ArrayUI({ array }: { array: any[] }) {
     </div>;
 }
 
-export function VisualizeUI({ state }: { state: VisualizerState }) {
+export function VisualizeContext({ state, children }: React.PropsWithChildren<{ state: VisualizerState }>) {
+    return <DataCtx.Provider value={state ?? emptyDataContext}>
+        <ColoringCtx.Provider value={state ?? emptyColoringContext}>
+            {children}
+        </ColoringCtx.Provider>
+    </DataCtx.Provider>;
+}
+
+export function StateUI() {
+    const { data } = useContext(DataCtx);
+
     const graphs: ReactElement[] = [];
 
-    for (const [name, value] of state.data.entries()) {
+    for (const [name, value] of data.entries()) {
         if (typeof value === "object") {
             if (value instanceof Set) {
                 graphs.push(<DataEntry name={name}>
@@ -245,7 +209,5 @@ export function VisualizeUI({ state }: { state: VisualizerState }) {
         }
     }
 
-    return <VisualizerStateContext.Provider value={state} >
-        <div className="data-entries">{graphs}</div>
-    </VisualizerStateContext.Provider>;
+    return <div className="data-entries">{graphs}</div>;
 } 

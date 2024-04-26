@@ -1,17 +1,20 @@
-import { EdgeBase, NodeBase, ReadonlyGraph } from "../algo";
+import { EdgeBase, NodeBase, ReadonlyGraph } from "../../algo";
 import { Group } from '@visx/group';
+import { useEdgeColor, useNodeColor } from "../Coloring";
 
 function NodeUI({ node, x, y, size }: { node: Readonly<NodeBase>, x: number, y: number, size: number }) {
+    const color = useNodeColor(node);
+
     return (
         <Group top={y + size / 2} left={x + size / 2}>
-            <circle r={size / 2 - 3} stroke={"white"} strokeWidth={"3px"} />
+            <circle r={size / 2 - 3} stroke={color} strokeWidth={"3px"} />
             <text
                 dy=".33em"
                 fontSize={9}
                 fontFamily="Arial"
                 textAnchor="middle"
                 style={{ pointerEvents: 'none' }}
-                fill={"white"}
+                fill={color}
             >
             {node.id}
             </text>
@@ -20,6 +23,8 @@ function NodeUI({ node, x, y, size }: { node: Readonly<NodeBase>, x: number, y: 
 }
 
 function EdgeUI({ edge, from, to }: { edge: Readonly<EdgeBase>, from: { x: number, y: number }, to: { x: number, y: number }}) {
+    const color = useEdgeColor(edge);
+
     const offsetX = to.x - from.x;
     const offsetY = to.y - from.y;
     const offsetLength = Math.sqrt(offsetX ** 2 + offsetY ** 2);
@@ -29,7 +34,7 @@ function EdgeUI({ edge, from, to }: { edge: Readonly<EdgeBase>, from: { x: numbe
     let middleY = from.y + offsetY * 0.5 + (offsetX / offsetLength) * 20 + 10 /* half of height */;
     
     return <>
-        <line x1={from.x} y1={from.y} x2={to.x} y2={to.y} stroke="white" strokeWidth="3px"  />
+        <line x1={from.x} y1={from.y} x2={to.x} y2={to.y} stroke={color} strokeWidth="3px"  />
         <text x={middleX} y={middleY} fill="white">{edge.weight}</text>
     </>
 }
