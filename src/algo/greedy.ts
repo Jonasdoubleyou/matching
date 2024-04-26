@@ -1,5 +1,19 @@
 import { Graph, Matcher, Matching, NodeBase, ReadonlyGraph, Visualizer } from "./base";
 
+/* Greedy Matching
+ *
+ * Sort all edges descending by weight,
+ * then iterate over the edges and add them to the result set,
+ * while keeping a set of used nodes, skip edges where one of the nodes
+ * is in the set.
+ * 
+ * Sorting the edges is O(|E] log |E|),
+ * iterating them and maintaining the node set is O(|E| * log(|V|)).
+ * 
+ * Trivial cases where this does not produce the optimal result:
+ * - Path of length 3, with the middle section having the most weight,
+ *    but the sum of the weight of the other two edges is bigger
+ */
 export const GreedyMatcher: Matcher = function* GreedyMatcher(input: ReadonlyGraph, visualize?: Visualizer) {
     visualize?.step("1. Sort edges descending by weight in O(|E| log |E|)");
     visualize?.data("Edges by weight", input.edges);
