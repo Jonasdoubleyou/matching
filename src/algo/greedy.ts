@@ -5,7 +5,7 @@ export const GreedyMatcher: Matcher = function* GreedyMatcher(input: ReadonlyGra
     visualize?.data("Edges by weight", input.edges);
     yield;
 
-    const edgesByWeight = [...input.edges].sort((a, b) => a.weight - b.weight);
+    const edgesByWeight = [...input.edges].sort((a, b) => b.weight - a.weight);
     visualize?.data("Edges by weight", edgesByWeight);
     yield;
 
@@ -34,14 +34,13 @@ export const GreedyMatcher: Matcher = function* GreedyMatcher(input: ReadonlyGra
         }
 
         result.push(heaviestEdge);
+        visualize?.pickEdge(heaviestEdge, "blue");
         yield;
 
         usedNodes.add(heaviestEdge.from);
-        visualize?.currentNode(heaviestEdge.from);
-        yield;
-
         usedNodes.add(heaviestEdge.to);
-        visualize?.currentNode(heaviestEdge.to);
+        visualize?.pickNode(heaviestEdge.from, "blue");
+        visualize?.pickNode(heaviestEdge.to, "blue");
         yield;
     }
 
