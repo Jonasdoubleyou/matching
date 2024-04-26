@@ -3,9 +3,10 @@ import './App.css';
 import { IconButton } from './base/Icons';
 import { Select } from './base/Select';
 import { Mission, missions } from '../test/missions';
-import { Row, Spacer } from './base/Layout';
+import { Column, Row, Spacer } from './base/Layout';
 import { CancellationToken, Matcher, MatcherName, Matching, RunResult, Visualizer, getScore, matcherNames, matchers, runAsync } from '../algo';
 import { VisualizeUI, useVisualizer } from './Visualizer';
+import { GraphUI } from './Graph';
 
 function Start({ startRun }: { startRun: (matcher: MatcherName, mission: Mission) => void }) {
     const [mission, setMission] = useState<Mission>();
@@ -109,12 +110,13 @@ function RunUI({ run, exit }: { run: MatchRun, exit: () => void }) {
     }
 
     return <div className="run">
-        <h1>{run.matcher} / {run.mission.name}</h1>
         <Row>
             <Spacer />
                 <IconButton icon="cancel" onClick={cancel} text='Cancel' />
+                <div>{run.matcher} / {run.mission.name}</div>
                 <Spacer />
-                <IconButton icon="arrow_back" disabled={(result.step - undoCount) === 0} onClick={undo} text='Previous' />
+                <IconButton icon="arrow_back" disabled={currentStep === 0} onClick={undo} text='Previous' />
+                <div>{currentStep}</div>
                 <IconButton icon="arrow_forward" disabled={result.result && undoCount === 0} onClick={redo} text={undoCount === 0 ? 'Advance' : 'Redo'} />
                 <Spacer />
                 <IconButton icon="pause" disabled={!running} onClick={pause} text="Pause" />
@@ -123,15 +125,21 @@ function RunUI({ run, exit }: { run: MatchRun, exit: () => void }) {
         </Row>
         <Row>
             <Spacer />
-            <h2>Step: {currentStep}</h2>
-            <Spacer />
-            <h2>{currentState?.step ?? ""}</h2>
-            <Spacer />
-            {result?.result && <h2>Score: {getScore(result?.result)}</h2>}
+            <Column grow>
+                <h2>Graph</h2>
+                <GraphUI graph={run.mission.input} />
+            </Column>
+            <Column grow>
+                <h2>State</h2>
+                {currentState && <VisualizeUI state={currentState} />}
+            </Column>
             <Spacer />
         </Row>
-        <h3>{currentState?.message ?? ""}</h3>
-        {currentState && <VisualizeUI state={currentState} />}
+        
+
+        <h3>{currentState?.step ?? ""}</h3>
+        <h4>{currentState?.message ?? ""}</h4>
+        {result?.result && <h4>Score: {getScore(result?.result)}</h4>}
     </div>;
 }
 

@@ -6,7 +6,6 @@
 }
 
 .data-entry {
-    border: 1px solid var(--primary);
     margin: 10px;
     padding: 10px;
     display: flex;
@@ -16,6 +15,7 @@
 .data-entry-name {
     text-align: left;
     margin: 20px;
+    font-weight: bold;
 }
 
 /* ---- Edge ---- */
@@ -29,7 +29,7 @@
 }
 
 .data-node, .data-edge-node {
-    border: thin solid var(--primary);
+    border: 3px solid var(--primary);
     padding: 15px;
     border-radius: 40px;
     line-height: 10px;
@@ -37,7 +37,7 @@
 }
 
 .data-edge-arrow {
-    border-bottom: thin solid var(--primary);
+    border-bottom: 3px solid var(--primary);
     width: 40px;
     margin: -10px 5px 20px 5px;
 }
@@ -62,6 +62,12 @@
 /* Set */
 .data-set {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     flex-wrap: wrap;
+}
+
+.data-set-entry {
+    display: flex;
+    flex-direction: row;
+    line-height: 50px;
 }

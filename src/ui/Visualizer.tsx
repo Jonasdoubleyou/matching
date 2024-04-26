@@ -1,21 +1,50 @@
-import { ReactElement, useMemo, useRef, useState } from "react";
+import { ReactElement, createContext, useContext, useMemo, useRef, useState } from "react";
 import { Color, EdgeBase, NodeBase, Visualizer, isEdge, isNode } from "../algo";
 
 import "./Visualizer.css";
 
 type DataMap = Map<string, any>;
 
+type EdgeID = string;
+function edgeID(edge: EdgeBase): EdgeID {
+    return `${nodeID(edge.from)}/${nodeID(edge.to)}`;
+}
+
+type NodeID = string;
+function nodeID(node: NodeBase): NodeID {
+    return `${node.id}`;
+}
+
 interface VisualizerState {
-    coloredEdges: Map<EdgeBase, Color>;
-    coloredNodes: Map<NodeBase, Color>;
+    coloredEdges: Map<EdgeID, Color>;
+    coloredNodes: Map<NodeID, Color>;
     
-    currentEdge?: EdgeBase;
-    currentNode?: NodeBase;
+    currentEdge?: EdgeID;
+    currentNode?: NodeID;
 
     step?: string;
     message?: string;
 
     data: DataMap;
+}
+
+const VisualizerStateContext = createContext<VisualizerState>({
+    coloredEdges: new Map(),
+    coloredNodes: new Map(),
+    data: new Map()
+});
+
+const useStateContext = () => useContext(VisualizerStateContext);
+const useEdgeColor = (edge: EdgeBase) => {
+    const ctx = useStateContext();
+    if (ctx.currentEdge === edgeID(edge)) return "lightgreen";
+    return ctx.coloredEdges.get(edgeID(edge)) ?? "white";
+}
+
+const useNodeColor = (node: NodeBase) => {
+    const ctx = useStateContext();
+    if (ctx.currentNode === nodeID(node)) return "lightgreen";
+    return ctx.coloredNodes.get(nodeID(node)) ?? "white";
 }
 
 const MAX_UNDO_STATES = 10;
@@ -66,22 +95,22 @@ export const useVisualizer = () => {
 
         function currentEdge(edge: EdgeBase) {
             console.log('currentEdge', edge);
-            activeState.current.currentEdge = edge;
+            activeState.current.currentEdge = edgeID(edge);
         }
 
         function currentNode(node: NodeBase) {
             console.log('currentNode', node);
-            activeState.current.currentNode = node;
+            activeState.current.currentNode = nodeID(node);
         }
 
         function pickEdge(edge: EdgeBase, color: Color) {
             console.log('pickEdge', edge, color);
-            activeState.current.coloredEdges.set(edge, color);
+            activeState.current.coloredEdges.set(edgeID(edge), color);
         }
 
         function pickNode(node: NodeBase, color: Color) {
             console.log('pickNode', node, color);
-            activeState.current.coloredNodes.set(node, color);
+            activeState.current.coloredNodes.set(nodeID(node), color);
         }
 
         return {
@@ -117,25 +146,37 @@ function EmptySet() {
     </div>
 }
 
+function NodeUI({ node }: { node: NodeBase }) {
+    const color = useNodeColor(node);
+
+    return <div className="data-node" style={{ color, borderColor: color }}>
+        {node.id}
+    </div>;
+}
+
+function EdgeUI({ edge }: { edge: EdgeBase }) {
+    const color = useEdgeColor(edge);
+    const style = { color, borderColor: color };
+
+    return <div className="data-edge" style={style}>
+            <div className="data-edge-node" style={style}>
+                {edge.from.id}
+            </div>
+            <div className="data-edge-arrow" style={style}>
+                {edge.weight}
+            </div>
+            <div className="data-edge-node" style={style}>
+                {edge.to.id}
+            </div>
+    </div>;
+}
 function visualizeValue(value: any) {
     if (isNode(value)) {
-        return <div className="data-node">
-            {value.id}
-        </div>;
+        return <NodeUI node={value} />
     }
 
     if (isEdge(value)) {
-        return <div className="data-edge">
-            <div className="data-edge-node">
-                {value.from.id}
-            </div>
-            <div className="data-edge-arrow">
-                {value.weight}
-            </div>
-            <div className="data-edge-node">
-                {value.to.id}
-            </div>
-        </div>;
+        return <EdgeUI edge={value} />
     }
 
     return value;
@@ -143,7 +184,9 @@ function visualizeValue(value: any) {
 
 function SetUI({ set }: { set: Set<any> }) {
     return <div className="data-set">
-        {[...set.values()].map(visualizeValue)}
+        {[...set.values()].map(value => <div className="data-set-entry">
+            → {visualizeValue(value)}
+        </div>)}
     </div>
 }
 
@@ -202,5 +245,7 @@ export function VisualizeUI({ state }: { state: VisualizerState }) {
         }
     }
 
-    return <div className="data-entries">{graphs}</div>
+    return <VisualizerStateContext.Provider value={state} >
+        <div className="data-entries">{graphs}</div>
+    </VisualizerStateContext.Provider>;
 } 

@@ -19,15 +19,29 @@ export const GreedyMatcher: Matcher = function* GreedyMatcher(input: ReadonlyGra
     for (const heaviestEdge of edgesByWeight) { // O(|E|)
         visualize?.currentEdge(heaviestEdge);
         
-        if (usedNodes.has(heaviestEdge.from) || usedNodes.has(heaviestEdge.to)) { // O(log |V|)
-            visualize?.message("Edge departs or arrives from existing node");
+        if (usedNodes.has(heaviestEdge.from)) { // O(log |V|)
+            visualize?.message("Edge departs from existing node");
+            visualize?.currentNode(heaviestEdge.from);
+            yield;
+            continue;
+        }
+
+        if (usedNodes.has(heaviestEdge.to)) { // O(log |V|)
+            visualize?.message("Edge arrives at existing node");
+            visualize?.currentNode(heaviestEdge.to);
             yield;
             continue;
         }
 
         result.push(heaviestEdge);
+        yield;
+
         usedNodes.add(heaviestEdge.from);
+        visualize?.currentNode(heaviestEdge.from);
+        yield;
+
         usedNodes.add(heaviestEdge.to);
+        visualize?.currentNode(heaviestEdge.to);
         yield;
     }
 
