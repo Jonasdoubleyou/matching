@@ -23,7 +23,7 @@ const DataCtx = createContext<DataContext>(emptyDataContext);
 
 interface VisualizerState extends ColoringContext, DataContext {}
 
-const MAX_UNDO_STATES = 10;
+const MAX_UNDO_STATES = 100;
 
 export const useVisualizer = () => {
     const activeState = useRef<VisualizerState>({

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import './App.css';
 import { IconButton } from './base/Icons';
 import { Select } from './base/Select';
@@ -7,10 +7,28 @@ import { Column, Row, Spacer } from './base/Layout';
 import { CancellationToken, Matcher, MatcherName, Matching, RunResult, Visualizer, getScore, matcherNames, matchers, runAsync } from '../algo';
 import { StateUI, VisualizeContext, useVisualizer } from './Visualizer';
 import { GraphUI } from './graph/Graph';
+import { NumberInput } from './base/NumberInput';
+import { generateRandomMission } from '../test/random';
 
 function Start({ startRun }: { startRun: (matcher: MatcherName, mission: Mission) => void }) {
     const [mission, setMission] = useState<Mission>();
     const [matcher, setMatcher] = useState<MatcherName>();
+
+    const [nodeCount, setNodeCount] = useState<number>(0);
+    const [edgeCount, setEdgeCount] = useState<number>(0);
+
+    // Selected Mission and Random Mission are mutually exclusive:
+    useEffect(() => { if(nodeCount || edgeCount) { setMission(undefined); } }, [nodeCount, edgeCount]);
+    useEffect(() => { if(mission) { setNodeCount(0); setEdgeCount(0); } }, [mission]);
+
+    function start() {
+        if (mission) {
+            startRun(matcher!, mission!);
+        } else {
+            startRun(matcher!, generateRandomMission(nodeCount, edgeCount));
+        }
+    }
+    const hasMission = mission || (nodeCount && edgeCount);
 
     return (
         <div className="start">
@@ -19,13 +37,31 @@ function Start({ startRun }: { startRun: (matcher: MatcherName, mission: Mission
                 Projektarbeit 1 / Jonas Wilms / HKA
             </p>
 
-            <Row>
+            <Column>
+            <Row grow>
                 <Spacer />
-                <Select placeholder="<Mission>" options={missions} onChange={setMission} map={it => it.name} />
-                <Select placeholder="<Matcher>" options={matcherNames} onChange={setMatcher} />
-                <IconButton disabled={!matcher || !mission} icon="play_arrow" text="Start" onClick={() => startRun(matcher!, mission!)} />
+                <Select placeholder="<Matcher>" selected={matcher} options={matcherNames} onChange={setMatcher} />
                 <Spacer />
             </Row>
+            <Row>
+                <Column>
+                    <h3>Predefined Mission</h3>
+                    <Select placeholder="<Mission>" options={missions} onChange={setMission} selected={mission} map={it => it.name} />
+                </Column>
+                <Spacer />
+                <Column>
+                    <h3>Random Mission</h3>
+                    <NumberInput placeholder='Nodes' value={nodeCount} setValue={setNodeCount} />
+                    <NumberInput placeholder='Edges' value={edgeCount} setValue={setEdgeCount} />
+                </Column>
+            </Row>
+            <Row>
+                <Spacer />
+                <IconButton disabled={!matcher || !hasMission} icon="play_arrow" text="Start" onClick={start} />
+                <Spacer />
+            </Row>
+            </Column>
+            
         </div>
       );
 }
@@ -64,6 +100,9 @@ function RunUI({ run, exit }: { run: MatchRun, exit: () => void }) {
     const currentStep = states.length - undoCount;
     const currentState = states[currentStep - 1];
 
+    const finalScore = useMemo(() => result?.result && getScore(result?.result), [result]);
+    const isBest = run.mission.bestScore === finalScore;
+
     function next() {
         if (result.result) return;
 
@@ -81,12 +120,12 @@ function RunUI({ run, exit }: { run: MatchRun, exit: () => void }) {
         exit();
     }
 
-    function play() {
+    function play(stepTime = 1000) {
         if (intervalID) return;
         setUndoCount(0);
 
         console.log(`Playing`);
-        setIntervalID({ id: setInterval(next, 1000) });
+        setIntervalID({ id: setInterval(next, stepTime) });
     }
 
     function pause() {
@@ -109,6 +148,11 @@ function RunUI({ run, exit }: { run: MatchRun, exit: () => void }) {
         }
     }
 
+    function runToEnd() {
+        pause();
+        play(10);
+    }
+
     return <div className="run">
         <Row>
             <Spacer />
@@ -121,6 +165,7 @@ function RunUI({ run, exit }: { run: MatchRun, exit: () => void }) {
                 <Spacer />
                 <IconButton icon="pause" disabled={!running} onClick={pause} text="Pause" />
                 <IconButton icon="play_arrow" disabled={running || !!result.result} onClick={play} text='Play' />
+                <IconButton icon="play_arrow" disabled={!!result.result} onClick={runToEnd} text='Run to End' />
             <Spacer />
         </Row>
         <Row>
@@ -141,7 +186,9 @@ function RunUI({ run, exit }: { run: MatchRun, exit: () => void }) {
 
         <h3>{currentState?.step ?? ""}</h3>
         <h4>{currentState?.message ?? ""}</h4>
-        {result?.result && <h4>Score: {getScore(result?.result)}</h4>}
+        {result?.result && <>
+            <h2 style={{ color: isBest ? "lightgreen" : "orange" }}>Score: {finalScore} / {run.mission?.bestScore ?? "?"}</h2>
+        </>}
     </div>;
 }
 

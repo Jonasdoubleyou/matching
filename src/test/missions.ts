@@ -3,7 +3,7 @@ import { EdgeBase, Graph, NodeBase } from "../algo/base";
 export interface Mission {
     name: string;
     input: Graph;
-    bestScore: number;
+    bestScore?: number;
 }
 
 function buildGraph(nodeCount: number, buildEdges: (nodes: NodeBase[]) => EdgeBase[]): Graph {
@@ -63,4 +63,13 @@ export const missions: Mission[] = [
         ])),
         bestScore: 4
     },
+    {
+        name: "3 Edge path",
+        input: buildGraph(4, node => ([
+            { from: node[0], to: node[1], weight: 2 },
+            { from: node[1], to: node[2], weight: 3 },
+            { from: node[2], to: node[3], weight: 2 },
+        ])),
+        bestScore: 4
+    }
 ];
