@@ -164,7 +164,7 @@ function RunUI({ run, exit }: { run: MatchRun, exit: () => void }) {
                 <IconButton icon="arrow_forward" disabled={result.result && undoCount === 0} onClick={redo} text={undoCount === 0 ? 'Advance' : 'Redo'} />
                 <Spacer />
                 <IconButton icon="pause" disabled={!running} onClick={pause} text="Pause" />
-                <IconButton icon="play_arrow" disabled={running || !!result.result} onClick={play} text='Play' />
+                <IconButton icon="play_arrow" disabled={running || !!result.result} onClick={() => play()} text='Play' />
                 <IconButton icon="play_arrow" disabled={!!result.result} onClick={runToEnd} text='Run to End' />
             <Spacer />
         </Row>
