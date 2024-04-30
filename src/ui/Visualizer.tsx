@@ -133,6 +133,10 @@ function visualizeValue(value: any) {
         return <StandaloneEdgeUI edge={value} />
     }
 
+    if (Array.isArray(value)) {
+        return <ArrayUI array={value} />
+    }
+
     return value;
 }
 

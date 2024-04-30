@@ -1,12 +1,13 @@
-import { Matcher } from "./base";
 import { GreedyMatcher } from "./greedy";
+import { PathGrowingMatcher } from "./path_growing";
 
 export * from "./base";
 export { GreedyMatcher } from "./greedy";
 
 
 export const matchers = {
-    GreedyMatcher
+    GreedyMatcher,
+    PathGrowingMatcher
 } as const;
 
 export type MatcherName = keyof typeof matchers;
