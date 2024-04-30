@@ -168,6 +168,24 @@ function RunUI({ run, exit }: { run: MatchRun, exit: () => void }) {
                 <IconButton icon="play_arrow" disabled={!!result.result} onClick={runToEnd} text='Run to End' />
             <Spacer />
         </Row>
+
+        <Row>
+            <Spacer />
+            <Row grow>
+                <h3>{currentState?.step ?? ""}</h3>
+            </Row>
+            <Row grow>
+                <h4>{currentState?.message ?? ""}</h4>
+            </Row>
+            <Row grow>
+                {result?.result && <>
+                    <h2 style={{ color: isBest ? "lightgreen" : "orange" }}>Score: {finalScore} / {run.mission?.bestScore ?? "?"}</h2>
+                </>}
+            </Row>
+            <Spacer />
+        </Row>
+        
+
         <Row>
             <Spacer />
             <VisualizeContext state={currentState}>
@@ -181,14 +199,7 @@ function RunUI({ run, exit }: { run: MatchRun, exit: () => void }) {
                 </Column>
             </VisualizeContext>     
             <Spacer />
-        </Row>
-        
-
-        <h3>{currentState?.step ?? ""}</h3>
-        <h4>{currentState?.message ?? ""}</h4>
-        {result?.result && <>
-            <h2 style={{ color: isBest ? "lightgreen" : "orange" }}>Score: {finalScore} / {run.mission?.bestScore ?? "?"}</h2>
-        </>}
+        </Row>  
     </div>;
 }
 
