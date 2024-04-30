@@ -27,9 +27,9 @@ export function Icon ({ icon }: IconProps) {
     );
 }
 
-export function IconButton({ text, onClick, small, highlight, disabled, ...iconProps }: { icon: IconName, text?: string, small?: true, highlight?: true, disabled?: boolean, onClick?: () => void } & IconProps) {
+export function IconButton({ text, onClick, small, highlight, disabled, style, ...iconProps }: { icon: IconName, text?: string, small?: true, highlight?: true, disabled?: boolean, onClick?: () => void, style?: React.CSSProperties } & IconProps) {
     return (
-        <button disabled={disabled} className={"icon-button no-print " + (small ? "icon-button_small" : "") + (highlight ? "icon-button_highlight" : "")} onClick={onClick}>
+        <button disabled={disabled} className={"icon-button no-print " + (small ? "icon-button_small" : "") + (highlight ? "icon-button_highlight" : "")} onClick={onClick} style={style}>
             <Icon {...iconProps} />
             {text && <div className="icon-button-text">{text}</div>}
         </button>

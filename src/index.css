@@ -1,11 +1,14 @@
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined');
 
-:root {
+body {
     --secondary: #000000;
     --primary: #ffffff;
-    /* --secondary: #ffffff;
-    --primary: #000000; */
+}
+
+body.dark-mode {
+    --secondary: #ffffff;
+    --primary: #000000
 }
 
 
