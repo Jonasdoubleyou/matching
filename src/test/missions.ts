@@ -71,5 +71,15 @@ export const missions: Mission[] = [
             { from: node[2], to: node[3], weight: 2 },
         ])),
         bestScore: 4
+    },
+    {
+        name: "4 edge path",
+        input: buildGraph(5, node => ([
+            { from: node[0], to: node[1], weight: 10 },
+            { from: node[1], to: node[2], weight: 0 },
+            { from: node[2], to: node[3], weight: 0 },
+            { from: node[3], to: node[4], weight: 10 },        
+        ])),
+        bestScore: 20,
     }
 ];
