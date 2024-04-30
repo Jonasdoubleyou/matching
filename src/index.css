@@ -4,7 +4,10 @@
 :root {
     --secondary: #000000;
     --primary: #ffffff;
+    /* --secondary: #ffffff;
+    --primary: #000000; */
 }
+
 
 body {
   margin: 0;
@@ -12,16 +15,16 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  background-color: black;
-  color: white;
+  background-color: var(--primary);
+  color: var(--secondary);
   text-align: center;
 }
 
 button {
     all: unset;
     cursor: pointer;
-    background-color: white;
-    color: black;
+    background-color: var(--secondary);
+    color: var(--primary);
     padding: 15px 50px;
     font-weight: bold;
 }

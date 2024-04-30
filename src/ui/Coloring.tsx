@@ -19,11 +19,11 @@ export const ColoringCtx = createContext<ColoringContext>(emptyColoringContext);
 export const useEdgeColor = (edge: EdgeBase) => {
     const ctx = useContext(ColoringCtx);
     if (ctx.currentEdge === edgeID(edge)) return "lightgreen";
-    return ctx.coloredEdges.get(edgeID(edge)) ?? "white";
+    return ctx.coloredEdges.get(edgeID(edge)) ?? "var(--secondary)";
 }
 
 export const useNodeColor = (node: NodeBase) => {
     const ctx = useContext(ColoringCtx);
     if (ctx.currentNode === nodeID(node)) return "lightgreen";
-    return ctx.coloredNodes.get(nodeID(node)) ?? "white";
+    return ctx.coloredNodes.get(nodeID(node)) ?? "var(--secondary)";
 }

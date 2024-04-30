@@ -7,7 +7,7 @@ function NodeUI({ node, x, y, size }: { node: Readonly<NodeBase>, x: number, y: 
 
     return (
         <Group top={y + size / 2} left={x + size / 2}>
-            <circle r={size / 2 - 3} stroke={color} strokeWidth={"3px"} />
+            <circle r={size / 2 - 3} stroke={color} strokeWidth={"3px"} fill={"var(--primary)"} />
             <text
                 dy=".33em"
                 fontSize={9}
@@ -35,7 +35,7 @@ function EdgeUI({ edge, from, to }: { edge: Readonly<EdgeBase>, from: { x: numbe
     
     return <>
         <line x1={from.x} y1={from.y} x2={to.x} y2={to.y} stroke={color} strokeWidth="3px"  />
-        <text x={middleX} y={middleY} fill="white">{edge.weight}</text>
+        <text x={middleX} y={middleY} fill="var(--secondary)">{edge.weight}</text>
     </>
 }
 
