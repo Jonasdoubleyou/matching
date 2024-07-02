@@ -8,7 +8,7 @@ import { Graph, Matcher, Matching, NodeBase, ReadonlyGraph, Visualizer } from ".
  * is in the set.
  * 
  * Sorting the edges is O(|E] log |E|),
- * iterating them and maintaining the node set is O(|E| * log(|V|)).
+ * iterating them and maintaining the node set is O(|E|).
  * 
  * Trivial cases where this does not produce the optimal result:
  * - Path of length 3, with the middle section having the most weight,
@@ -33,14 +33,14 @@ export const GreedyMatcher: Matcher = function* GreedyMatcher(input: ReadonlyGra
     for (const heaviestEdge of edgesByWeight) { // O(|E|)
         visualize?.currentEdge(heaviestEdge);
         
-        if (usedNodes.has(heaviestEdge.from)) { // O(log |V|)
+        if (usedNodes.has(heaviestEdge.from)) { // O(1)
             visualize?.message("Edge departs from existing node");
             visualize?.currentNode(heaviestEdge.from);
             yield;
             continue;
         }
 
-        if (usedNodes.has(heaviestEdge.to)) { // O(log |V|)
+        if (usedNodes.has(heaviestEdge.to)) { // O(1)
             visualize?.message("Edge arrives at existing node");
             visualize?.currentNode(heaviestEdge.to);
             yield;
@@ -51,8 +51,8 @@ export const GreedyMatcher: Matcher = function* GreedyMatcher(input: ReadonlyGra
         visualize?.pickEdge(heaviestEdge, "blue");
         yield;
 
-        usedNodes.add(heaviestEdge.from);
-        usedNodes.add(heaviestEdge.to);
+        usedNodes.add(heaviestEdge.from); // O(1)
+        usedNodes.add(heaviestEdge.to); // O(1)
         visualize?.pickNode(heaviestEdge.from, "blue");
         visualize?.pickNode(heaviestEdge.to, "blue");
         yield;

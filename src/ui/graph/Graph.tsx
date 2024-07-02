@@ -50,7 +50,7 @@ function NodeCircle({ nodes, edges, size, x, y }: { nodes: readonly Readonly<Nod
         const rotation = index / nodes.length * 2 * Math.PI;
         const x = offsetX + radius * Math.sin(rotation);
         const y = offsetY + radius * Math.cos(rotation);
-        return { x, y};    
+        return { x, y };    
     }
 
     return <>

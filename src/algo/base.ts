@@ -4,26 +4,10 @@ export interface NodeBase {
     id: number;
 }
 
-export function isNode(it: any): it is NodeBase {
-    return "id" in it;
-}
-
-export function sameNode(a: NodeBase, b: NodeBase) {
-    return a.id === b.id;
-}
-
 export interface EdgeBase<Node = NodeBase>  {
     from: Node;
     to: Node;
     weight: number;
-}
-
-export function isEdge(it: any): it is EdgeBase {
-    return "from" in it && "to" in it && "weight" in it;
-}
-
-export function sameEdge(a: EdgeBase, b: EdgeBase) {
-    return sameNode(a.from, b.from) && sameNode(a.to, b.to) && a.weight === b.weight;
 }
 
 export interface Graph<Node = NodeBase, Edge = EdgeBase<Node>> {
@@ -35,6 +19,25 @@ export interface ReadonlyGraph<Node = NodeBase, Edge = EdgeBase<Node>> {
     nodes: readonly Readonly<Node>[];
     edges: readonly Readonly<Edge>[];
 }
+
+export function isNode(it: any): it is NodeBase {
+    return "id" in it;
+}
+
+export function sameNode(a: NodeBase, b: NodeBase) {
+    return a.id === b.id;
+}
+
+
+export function isEdge(it: any): it is EdgeBase {
+    return "from" in it && "to" in it && "weight" in it;
+}
+
+export function sameEdge(a: EdgeBase, b: EdgeBase) {
+    return sameNode(a.from, b.from) && sameNode(a.to, b.to) && a.weight === b.weight;
+}
+
+
 
 export type EdgeID = string;
 export function edgeID(edge: EdgeBase): EdgeID {
@@ -62,6 +65,8 @@ export interface Visualizer {
 
     pickEdge(edge: EdgeBase, color: Color): void;
     pickNode(edge: NodeBase, color: Color): void;
+
+    removeHighlighting(): void;
 
     commit(): void;
 }

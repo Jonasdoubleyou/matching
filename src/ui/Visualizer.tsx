@@ -89,6 +89,11 @@ export const useVisualizer = () => {
             activeState.current.coloredNodes.set(nodeID(node), color);
         }
 
+        function removeHighlighting() {
+            activeState.current.coloredEdges.clear();
+            activeState.current.coloredNodes.clear();
+        }
+
         return {
             step,
             message,
@@ -97,7 +102,8 @@ export const useVisualizer = () => {
             currentEdge,
             currentNode,
             pickEdge,
-            pickNode
+            pickNode,
+            removeHighlighting
         };
     }, [activeState, setStates]);
 
@@ -187,7 +193,7 @@ export function StateUI() {
 
     const graphs: ReactElement[] = [];
 
-    for (const [name, value] of data.entries()) {
+    for (let [name, value] of data.entries()) {
         if (typeof value === "object") {
             if (value instanceof Set) {
                 graphs.push(<DataEntry name={name}>
