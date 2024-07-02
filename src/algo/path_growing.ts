@@ -1,3 +1,4 @@
+import { AdjacencyList } from "../datastructures/adjacency_list";
 import { assert } from "../util/assert";
 import { EdgeBase, Matcher, Matching, NodeBase, ReadonlyGraph, Visualizer, getScore } from "./base";
 
@@ -15,35 +16,23 @@ export const PathGrowingMatcher: Matcher = function* PathGrowingMatcher(input: R
     const solutionTwo: Matching = [];
     visualize?.data("solution two", solutionTwo);
 
-    const adjacencyList: Map<NodeBase, EdgeBase[]> = new Map();
+    const adjacencyList = new AdjacencyList();
     visualize?.data("adjacency list", adjacencyList);
 
     visualize?.step("1. Build adjacency list O(|E|)");
-    for (const edge of input.edges) {
-        visualize?.currentEdge(edge);
-        if (!adjacencyList.has(edge.from)) {
-            adjacencyList.set(edge.from, []);
-        }
-        if (!adjacencyList.has(edge.to)) {
-            adjacencyList.set(edge.to, []);
-        }
-
-        adjacencyList.get(edge.from)?.push(edge);
-        adjacencyList.get(edge.to)?.push(edge);
-        yield;
-    }
+    yield* adjacencyList.fill(input.edges, visualize);
 
     visualize?.step("2. Build paths O(|E|)");
     visualize?.message("Pick random node");
 
-    while(adjacencyList.size > 0) {
-        let { value: currentNode } = adjacencyList.keys().next();
-        visualize?.message("P")
+    while(!adjacencyList.empty()) {
+        visualize?.message("Pick random node")
+        let currentNode = adjacencyList.popNode();
         while(true) {
             visualize?.currentNode(currentNode);
             yield;
 
-            const departingEdges = adjacencyList.get(currentNode)!;
+            const departingEdges = adjacencyList.edgesOf(currentNode)!;
             const heaviestEdge = departingEdges.reduce((a, b) => a.weight > b.weight ? a : b);
             visualize?.currentEdge(heaviestEdge);
             yield;
@@ -57,25 +46,8 @@ export const PathGrowingMatcher: Matcher = function* PathGrowingMatcher(input: R
             }
             yield;
 
-            adjacencyList.delete(currentNode);
-            for (const edge of departingEdges) {
-                const other = edge.from === currentNode ? edge.to : edge.from;
-                const otherDeparting = adjacencyList.get(other);
-                if (otherDeparting) {
-                    if (otherDeparting.length === 1) {
-                        assert(otherDeparting[0] === edge, "Malformed adjacency list");
-                        adjacencyList.delete(other);
-                    } else {
-                        const index = otherDeparting.indexOf(edge);
-                        assert(index !== -1, "Malformed adjacency list");
-                        otherDeparting.splice(index, 1);
-                    }
-                }
-            }
-
             visualize?.message("Unlink current node from adjacency list");
-            yield;
-
+            yield* adjacencyList.remove(currentNode);
 
             currentNode = heaviestEdge.from === currentNode ? heaviestEdge.to : heaviestEdge.from;
             if (!adjacencyList.has(currentNode)) {
