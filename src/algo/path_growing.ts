@@ -17,7 +17,7 @@ export const PathGrowingMatcher: Matcher = function* PathGrowingMatcher(input: R
     visualize?.data("solution two", solutionTwo);
 
     const adjacencyList = new AdjacencyList();
-    visualize?.data("adjacency list", adjacencyList);
+    visualize?.data("adjacency list", adjacencyList.adjacencyList);
 
     visualize?.step("1. Build adjacency list O(|E|)");
     yield* adjacencyList.fill(input.edges, visualize);
