@@ -21,7 +21,7 @@ export interface ReadonlyGraph<Node = NodeBase, Edge = EdgeBase<Node>> {
 }
 
 export function isNode(it: any): it is NodeBase {
-    return "id" in it;
+    return typeof it === "object" && it !== null && "id" in it;
 }
 
 export function sameNode(a: NodeBase, b: NodeBase) {
@@ -30,7 +30,7 @@ export function sameNode(a: NodeBase, b: NodeBase) {
 
 
 export function isEdge(it: any): it is EdgeBase {
-    return "from" in it && "to" in it && "weight" in it;
+    return typeof it === "object" && it !== null && "from" in it && "to" in it;
 }
 
 export function sameEdge(a: EdgeBase, b: EdgeBase) {
@@ -41,7 +41,9 @@ export function sameEdge(a: EdgeBase, b: EdgeBase) {
 
 export type EdgeID = string;
 export function edgeID(edge: EdgeBase): EdgeID {
-    return `${nodeID(edge.from)}/${nodeID(edge.to)}`;
+    const a = nodeID(edge.from);
+    const b = nodeID(edge.to);
+    return a > b ? a + "/" + b : b + "/" + a;
 }
 
 export type NodeID = string;

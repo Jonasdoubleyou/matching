@@ -46,15 +46,12 @@ export const NaiveMatcher: Matcher = function* GreedyMatcher(input: ReadonlyGrap
 
     let bestSolution: Matching = [];
     for (const solution of iterate(0, [])) {
-        console.log("solution", solution);
-
         if (visualize) {
             for (const edge of solution)
                 visualize.pickEdge(edge, 'blue');
         }
 
         if (getScore(solution) > getScore(bestSolution)) {
-            console.log("solution better than bestSolution", solution, bestSolution);
             bestSolution = [...solution];
         }
 

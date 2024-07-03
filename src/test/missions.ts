@@ -76,10 +76,30 @@ export const missions: Mission[] = [
         name: "4 edge path",
         input: buildGraph(5, node => ([
             { from: node[0], to: node[1], weight: 10 },
-            { from: node[1], to: node[2], weight: 0 },
-            { from: node[2], to: node[3], weight: 0 },
-            { from: node[3], to: node[4], weight: 10 },        
+            { from: node[1], to: node[2], weight: 1 },
+            { from: node[2], to: node[3], weight: 1 },
+            { from: node[3], to: node[4], weight: 9 },        
         ])),
         bestScore: 20,
+    },
+    {
+        name: "Eight",
+        input: buildGraph(6, node => ([
+            { from: node[0], to: node[1], weight: 10 },
+            { from: node[1], to: node[2], weight: 0 },
+            { from: node[2], to: node[3], weight: 0 },
+            { from: node[3], to: node[0], weight: 8 },
+            { from: node[0], to: node[4], weight: 5 },
+            { from: node[1], to: node[5], weight: 5 },
+            { from: node[4], to: node[5], weight: 5 }    
+        ]))
+    },
+    {
+        name: "Three loose Edges",
+        input: buildGraph(6, node => ([
+            { from: node[0], to: node[1], weight: 10 },
+            { from: node[2], to: node[3], weight: 10 },
+            { from: node[4], to: node[5], weight: 9 }, 
+        ]))
     }
 ];
