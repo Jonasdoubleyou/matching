@@ -10,7 +10,7 @@ import { GraphUI } from './graph/Graph';
 import { NumberInput } from './base/NumberInput';
 import { generateRandomMission } from '../test/random';
 
-function Start({ startRun }: { startRun: (matcher: MatcherName | undefined, mission: Mission, mode: "visualize" | "compare") => void }) {
+function Start({ startRun, startCompare }: { startRun: (matcher: MatcherName | undefined, mission: Mission) => void, startCompare: () => void }) {
     const [mission, setMission] = useState<Mission>();
     const [matcher, setMatcher] = useState<MatcherName>();
 
@@ -22,14 +22,12 @@ function Start({ startRun }: { startRun: (matcher: MatcherName | undefined, miss
     useEffect(() => { if(mission) { setNodeCount(0); setEdgeCount(0); } }, [mission]);
 
 
-    function start(mode: "visualize" | "compare") {
-        return function() {
+    function start() {
             if (mission) {
-                startRun(matcher, mission!, mode);
+                startRun(matcher, mission!);
             } else {
-                startRun(matcher, generateRandomMission(nodeCount, edgeCount), mode);
+                startRun(matcher, generateRandomMission(nodeCount, edgeCount));
             }
-        }
     }
 
 
@@ -62,12 +60,11 @@ function Start({ startRun }: { startRun: (matcher: MatcherName | undefined, miss
             </Row>
             <Row>
                 <Spacer />
-                <IconButton disabled={!matcher || !hasMission} icon="play_arrow" text="Start" onClick={start("visualize")} />
-                <IconButton disabled={!hasMission} icon="play_arrow" text="Compare" onClick={start("compare")} />
+                <IconButton disabled={!matcher || !hasMission} icon="play_arrow" text="Start" onClick={start} />
                 <Spacer />
             </Row>
             </Column>
-            
+            <IconButton icon="play_arrow" text="Compare Mode" onClick={startCompare} />
         </div>
       );
 }
@@ -209,7 +206,7 @@ function RunUI({ run, exit }: { run: MatchRun, exit: () => void }) {
     </div>;
 }
 
-function CompareUI({ mission, exit }: { mission: Mission, exit: () => void }) {
+function CompareUI({ exit }: { exit: () => void }) {
     const [results, setResults] = useState<(RunResult & { matcher: MatcherName, score: number, duration: number })[]>([]);
     
     const running = useRef<number>(0);
@@ -221,6 +218,7 @@ function CompareUI({ mission, exit }: { mission: Mission, exit: () => void }) {
         running.current = currentRun;
 
         (async function () {
+            const mission = generateRandomMission(10, 100);
             for (const [name, matcher] of Object.entries(matchers)) {
                 if (running.current !== currentRun) return;
 
@@ -270,25 +268,22 @@ function CompareUI({ mission, exit }: { mission: Mission, exit: () => void }) {
 }
 
 function App() {
+    const [compare, setCompare] = useState(false);
     const [run, setRun] = useState<MatchRun>();
-    const [compare, setCompare] = useState<Mission>();
 
-    function startRun(matcher: MatcherName | undefined, mission: Mission, mode: "visualize" | "compare") {
-        if (mode === "visualize") {
-            setRun({
+    function startRun(matcher: MatcherName | undefined, mission: Mission) {
+        setRun({
                 matcher: matcher!,
                 mission
-            });
-        } else {
-            setCompare(mission);
-        }
+        });
     }
 
+    if (compare) return <CompareUI exit={() => setCompare(false)} />;
+
     if (run) return <RunUI run={run} exit={() => setRun(undefined)} />;
-    if (compare) return <CompareUI mission={compare} exit={() => setCompare(undefined)} />;
 
     return <div className="app">
-        <Start startRun={startRun} />
+        <Start startRun={startRun} startCompare={() => setCompare(true)} />
     </div>;
 }
 

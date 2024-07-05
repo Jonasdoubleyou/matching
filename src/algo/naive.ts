@@ -3,6 +3,12 @@ import { EdgeBase, Matcher, Matching, NodeBase, ReadonlyGraph, Visualizer, getSc
 
 
 export const NaiveMatcher: Matcher = function* GreedyMatcher(input: ReadonlyGraph, visualize?: Visualizer) {
+    // The naive matcher has exponential runtime and will fail for larger graphs
+    if (input.nodes.length > 30) {
+        visualize?.step("Cannot run the Naive matcher on larger graphs due to exponential runtimes");
+        return [];
+    }
+
     const adjacencyList = new AdjacencyList();
     visualize?.data("Adjacency List", adjacencyList.adjacencyList);
     
