@@ -23,7 +23,7 @@ interface Benchmark {
 
 const benchmarks: Benchmark[] = [
     {
-        name: "Growing number of edges",
+        name: "Growing number of edges / Sparse",
         runs: [
             {
                 name: "1% edge rate",
@@ -73,6 +73,84 @@ const benchmarks: Benchmark[] = [
                 randomRepeat: 5,
                 repeat: 1
             },
+
+        ]
+    },
+
+    {
+        name: "Growing number of edges (small)",
+        runs: [
+            {
+                name: "10% edge rate",
+                nodeCount: 20,
+                edgeRate: 10,
+                matchers: matcherNames,
+                randomRepeat: 5,
+                repeat: 1
+            },
+            {
+                name: "20% edge rate",
+                nodeCount: 20,
+                edgeRate: 20,
+                matchers: matcherNames,
+                randomRepeat: 5,
+                repeat: 1
+            },
+            {
+                name: "30% edge rate",
+                nodeCount: 20,
+                edgeRate: 30,
+                matchers: matcherNames,
+                randomRepeat: 5,
+                repeat: 1
+            },
+            {
+                name: "40% edge rate",
+                nodeCount: 20,
+                edgeRate: 40,
+                matchers: matcherNames,
+                randomRepeat: 5,
+                repeat: 1
+            }
+
+        ]
+    },
+
+    {
+        name: "Growing number of edges / Interconnected",
+        runs: [
+            {
+                name: "60% edge rate",
+                nodeCount: 100,
+                edgeRate: 60,
+                matchers: ["BlossomMatcher", "GreedyMatcher", "PathGrowingMatcher"],
+                randomRepeat: 5,
+                repeat: 1
+            },
+            {
+                name: "70% edge rate",
+                nodeCount: 100,
+                edgeRate: 70,
+                matchers: ["BlossomMatcher", "GreedyMatcher", "PathGrowingMatcher"],
+                randomRepeat: 5,
+                repeat: 1
+            },
+            {
+                name: "80% edge rate",
+                nodeCount: 100,
+                edgeRate: 80,
+                matchers: ["BlossomMatcher", "GreedyMatcher", "PathGrowingMatcher"],
+                randomRepeat: 5,
+                repeat: 1
+            },
+            {
+                name: "100% edge rate",
+                nodeCount: 100,
+                edgeRate: 100,
+                matchers: ["BlossomMatcher", "GreedyMatcher", "PathGrowingMatcher"],
+                randomRepeat: 5,
+                repeat: 1
+            }
 
         ]
     }
