@@ -87,7 +87,7 @@ export function verifyMatching(input: ReadonlyGraph, output: ReadonlyMatching) {
             throw new Error(`Duplicate use of ${edge.from.id}`);
         }
 
-        if (usedNodes.has(edge.from)) {
+        if (usedNodes.has(edge.to)) {
             throw new Error(`Duplicate use of ${edge.from.id}`);
         }
 
@@ -126,6 +126,7 @@ export async function runAsync(input: ReadonlyGraph, matcher: Matcher, cancellat
             if (done) {
                 console.log(`Finished matching after ${steps} Steps`, { matching });
                 visualizer?.commit();
+                verifyMatching(input, matching);
                 return { matching, steps };
             }
         }
@@ -155,6 +156,7 @@ export function run(input: ReadonlyGraph, matcher: Matcher): RunResult {
 
         if (done) {
             console.log(`Finished matching after ${steps} Steps`, { matching });
+            verifyMatching(input, matching);
             return { matching, steps };
         }
     }
