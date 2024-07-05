@@ -8,16 +8,22 @@ export function generateRandomMission(nodeCount: number, edgeCount: number) {
     };
 
     graph.nodes = Array.from({ length: nodeCount }, (_, i) => ({ id: i + 1 }));
-    
-    const randomNode = () => graph.nodes[Math.floor(Math.random() * graph.nodes.length)];
 
-    graph.edges = Array.from({ length: edgeCount }, (_, i) => ({
-        from: randomNode(),
-        // TODO: Exclude reflexive edge, as those are useless in matching
-        to: randomNode(),
-        // TODO: Better distribution
-        weight: i
-    }));
+    for (let a = 0; a < nodeCount; a++) {
+        for (let b = a + 1; b < nodeCount; b++) {
+            if (a === b) continue;
+
+            if (edgeCount / (nodeCount * nodeCount) > Math.random()) {
+                graph.edges.push({
+                    from: graph.nodes[a],
+                    to: graph.nodes[b],
+                    weight: Math.floor(Math.random() * 1000)
+                })
+            }
+        }
+    }
+    
+    console.log("Generated Mission", graph);
 
     const mission: Mission = {
         input: graph,
