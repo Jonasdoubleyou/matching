@@ -105,6 +105,8 @@ export function getScore(output: ReadonlyMatching) {
 export interface RunResult {
     matching: Matching;
     steps: number;
+    runtime?: number;
+    score: number;
 }
 
 export interface CancellationToken {
@@ -127,7 +129,7 @@ export async function runAsync(input: ReadonlyGraph, matcher: Matcher, cancellat
                 console.log(`Finished matching after ${steps} Steps`, { matching });
                 visualizer?.commit();
                 verifyMatching(input, matching);
-                return { matching, steps };
+                return { matching, steps, score: getScore(matching) };
             }
         }
 
@@ -145,20 +147,36 @@ export async function runAsync(input: ReadonlyGraph, matcher: Matcher, cancellat
 }
 
 const MAX_STEPS = 100_000_000;
+const MAX_YIELD_STEPS = 100_000;
 
-export function run(input: ReadonlyGraph, matcher: Matcher): RunResult {
+// Run the matching as fast as possible, but yield once in a while to allow the runtime
+// to schedule other tasks inbetween, to keep the running process responsive
+export async function run(input: ReadonlyGraph, matcher: Matcher): Promise<RunResult> {
     const iterator = matcher(input);
+    let runtime = 0;
 
     let steps = 0;
     while(steps < MAX_STEPS) {
-        const { value: matching, done } = iterator.next();
-        steps += 1;
+        let matching: any;
+        let done: boolean | undefined = false;
+
+        const start = performance.now();
+        do {
+            ({ value: matching, done } = iterator.next());
+            steps += 1;
+        } while (!done && ((steps % MAX_YIELD_STEPS) !== 0));
+        const duration = performance.now() - start;
+        runtime += duration;
+
 
         if (done) {
             console.log(`Finished matching after ${steps} Steps`, { matching });
             verifyMatching(input, matching);
-            return { matching, steps };
+            return { matching, steps, runtime, score: getScore(matching) };
         }
+
+        console.log(`Deferring matching after ${steps} steps, runtime ${runtime.toFixed(2)}ms`);
+        await new Promise(res => setTimeout(res, 0));
     }
 
     throw new Error(`Matching exceeded ${MAX_STEPS}`);

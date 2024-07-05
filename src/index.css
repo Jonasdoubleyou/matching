@@ -31,3 +31,19 @@ button {
     padding: 15px 50px;
     font-weight: bold;
 }
+
+table, tr, td, th {
+    border: thin solid var(--secondary);
+    border-collapse: collapse;
+}
+
+table {
+    margin: 10px;
+    height: 500px;
+    overflow-y: scroll;
+    display: inline-block;
+}
+
+td, th {
+    padding: 10px;
+}

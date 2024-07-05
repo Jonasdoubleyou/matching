@@ -1,7 +1,7 @@
 import { Graph } from "../algo";
 import { Mission } from "./missions";
 
-export function generateRandomMission(nodeCount: number, edgeCount: number) {
+export function generateRandomMission(nodeCount: number, edgeRate: number) {
     const graph: Graph = {
         nodes: [],
         edges: []
@@ -13,7 +13,7 @@ export function generateRandomMission(nodeCount: number, edgeCount: number) {
         for (let b = a + 1; b < nodeCount; b++) {
             if (a === b) continue;
 
-            if (edgeCount / (nodeCount * nodeCount) > Math.random()) {
+            if (Math.random() < (edgeRate / 100)) {
                 graph.edges.push({
                     from: graph.nodes[a],
                     to: graph.nodes[b],
@@ -27,7 +27,7 @@ export function generateRandomMission(nodeCount: number, edgeCount: number) {
 
     const mission: Mission = {
         input: graph,
-        name: `Random ${nodeCount} x ${edgeCount}`
+        name: `Random ${nodeCount} x ${edgeRate}%`
     };
 
     return mission;

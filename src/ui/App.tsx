@@ -9,29 +9,30 @@ import { StateUI, VisualizeContext, useVisualizer } from './Visualizer';
 import { GraphUI } from './graph/Graph';
 import { NumberInput } from './base/NumberInput';
 import { generateRandomMission } from '../test/random';
+import { CompareUI } from './Compare';
 
 function Start({ startRun, startCompare }: { startRun: (matcher: MatcherName | undefined, mission: Mission) => void, startCompare: () => void }) {
     const [mission, setMission] = useState<Mission>();
     const [matcher, setMatcher] = useState<MatcherName>();
 
     const [nodeCount, setNodeCount] = useState<number>(0);
-    const [edgeCount, setEdgeCount] = useState<number>(0);
+    const [edgeRate, setEdgeRate] = useState<number>(0);
 
     // Selected Mission and Random Mission are mutually exclusive:
-    useEffect(() => { if(nodeCount || edgeCount) { setMission(undefined); } }, [nodeCount, edgeCount]);
-    useEffect(() => { if(mission) { setNodeCount(0); setEdgeCount(0); } }, [mission]);
+    useEffect(() => { if(nodeCount || edgeRate) { setMission(undefined); } }, [nodeCount, edgeRate]);
+    useEffect(() => { if(mission) { setNodeCount(0); setEdgeRate(0); } }, [mission]);
 
 
     function start() {
             if (mission) {
                 startRun(matcher, mission!);
             } else {
-                startRun(matcher, generateRandomMission(nodeCount, edgeCount));
+                startRun(matcher, generateRandomMission(nodeCount, edgeRate));
             }
     }
 
 
-    const hasMission = mission || (nodeCount && edgeCount);
+    const hasMission = mission || (nodeCount && edgeRate);
 
     return (
         <div className="start">
@@ -55,7 +56,7 @@ function Start({ startRun, startCompare }: { startRun: (matcher: MatcherName | u
                 <Column>
                     <h3>Random Mission</h3>
                     <NumberInput placeholder='Nodes' value={nodeCount} setValue={setNodeCount} />
-                    <NumberInput placeholder='Edges' value={edgeCount} setValue={setEdgeCount} />
+                    <NumberInput placeholder='Edge Rate (0 - 100%)' value={edgeRate} setValue={setEdgeRate} />
                 </Column>
             </Row>
             <Row>
@@ -206,66 +207,6 @@ function RunUI({ run, exit }: { run: MatchRun, exit: () => void }) {
     </div>;
 }
 
-function CompareUI({ exit }: { exit: () => void }) {
-    const [results, setResults] = useState<(RunResult & { matcher: MatcherName, score: number, duration: number })[]>([]);
-    
-    const running = useRef<number>(0);
-    const abort = () => running.current = 0;
-
-    function runAll() {
-        if (running.current) return;
-        const currentRun = Date.now();
-        running.current = currentRun;
-
-        (async function () {
-            const mission = generateRandomMission(10, 100);
-            for (const [name, matcher] of Object.entries(matchers)) {
-                if (running.current !== currentRun) return;
-
-                const start = performance.now();
-                const { matching, steps } = run(mission.input, matcher);
-                const duration = performance.now() - start;
-
-                const result = {
-                    matching,
-                    steps,
-                    score: getScore(matching),
-                    matcher: name as MatcherName,
-                    duration
-                };
-
-                setResults(prev => [...prev, result]);
-
-                await new Promise(res => setTimeout(res, 10));
-            }
-            running.current = 0;
-        })();
-
-        return () => { running.current = 0; };
-    }
-
-    return <div>
-        <IconButton icon="cancel" onClick={() => { exit(); abort(); }} text='Zurück' />
-        <IconButton icon="cancel" onClick={() => { exit(); abort(); }} text='Abbrechen' />
-        <IconButton icon="play_arrow" onClick={runAll} text='Start' />
-        <table>
-            <tr>
-                <th>Matcher</th>
-                <th>Schritte</th>
-                <th>Score</th>
-                <th>Dauer</th>
-            </tr>
-        {results.map(result => 
-            <tr>
-                <td>{result.matcher}</td>
-                <td>{result.steps}</td>
-                <td>{result.score}</td>
-                <td>{result.duration.toFixed(2)}ms</td>
-            </tr>    
-        )}
-        </table>
-    </div>;
-}
 
 function App() {
     const [compare, setCompare] = useState(false);
