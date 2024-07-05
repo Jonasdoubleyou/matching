@@ -1,7 +1,7 @@
 import { GreedyMatcher } from "./greedy";
 import { PathGrowingMatcher } from "./path_growing";
 import { NaiveMatcher } from "./naive";
-import { EdmondsMatcher as EdmondsMatcher_Broken } from "./edmonds";
+import { BlossomMatcher } from "./blossom";
 
 export * from "./base";
 export { GreedyMatcher } from "./greedy";
@@ -11,7 +11,7 @@ export const matchers = {
     GreedyMatcher,
     PathGrowingMatcher,
     NaiveMatcher,
-    EdmondsMatcher_Broken
+    BlossomMatcher
 } as const;
 
 export type MatcherName = keyof typeof matchers;
