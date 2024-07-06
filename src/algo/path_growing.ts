@@ -1,14 +1,15 @@
 import { AdjacencyList } from "../datastructures/adjacency_list";
-import { assert } from "../util/assert";
-import { EdgeBase, Matcher, Matching, NodeBase, ReadonlyGraph, Visualizer, getScore } from "./base";
+import { Matcher, Matching, ReadonlyGraph, Visualizer, getScore } from "./base";
 
-/* Path Growing Matching
+/* Path Growing Matching (approximation, O(|E|))
  *
  * Builds an adjacency list, to easily navigate along paths in the graph.
  * Then picks a random node, unlinks the node and all edges departing from it from the adjacency list,
  * and then follows along the heaviest edge. Thus it creates a path in which all nodes only appear once,
  * and which is relatively heavy (?). By taking the even or uneven edges in the path,
- * one can get two different matchings, and choose the one with higher score. 
+ * one can get two different matchings, and choose the one with higher score.
+ * 
+ * c.f. "A simple approximation algorithm for the weighted matching problem", Drake and Hougardy
  */
 export const PathGrowingMatcher: Matcher = function* PathGrowingMatcher(input: ReadonlyGraph, visualize?: Visualizer) {
     const solutionOne: Matching = [];

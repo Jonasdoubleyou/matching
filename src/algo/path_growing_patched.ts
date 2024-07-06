@@ -1,8 +1,7 @@
 import { AdjacencyList } from "../datastructures/adjacency_list";
-import { assert } from "../util/assert";
-import { EdgeBase, Matcher, Matching, NodeBase, ReadonlyGraph, Visualizer, getScore } from "./base";
+import { Matcher, Matching, ReadonlyGraph, Visualizer, getScore } from "./base";
 
-/* Patched Path Growing Matching
+/* Patched Path Growing Matching (approximation, O(|E|))
  *
  * Unlike the Path Growing Matching, decide for solution one or two when finishing the current path,
  * and not overall.

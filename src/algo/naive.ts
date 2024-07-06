@@ -1,7 +1,13 @@
 import { AdjacencyList } from "../datastructures/adjacency_list";
 import { EdgeBase, Matcher, Matching, NodeBase, ReadonlyGraph, Visualizer, getScore } from "./base";
 
-
+/* Naive Matching (Optimal, O(deg(|V|) ** |V|))
+ *
+ * Computes all edge combinations and then takes the combination with the maximum weight. As such it is guaranteed
+ * to find the optimal solution. However generating all combinations results in exponential runtime,
+ * and is thus only feasible for very small graphs.
+ * 
+ */
 export const NaiveMatcher: Matcher = function* GreedyMatcher(input: ReadonlyGraph, visualize?: Visualizer) {
     // The naive matcher has exponential runtime and will fail for larger graphs
     if (input.nodes.length > 50) {

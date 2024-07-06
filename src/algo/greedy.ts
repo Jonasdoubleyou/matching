@@ -1,6 +1,6 @@
 import { Graph, Matcher, Matching, NodeBase, ReadonlyGraph, Visualizer } from "./base";
 
-/* Greedy Matching
+/* Greedy Matching (approximation, O(|E| log |E|))
  *
  * Sort all edges descending by weight,
  * then iterate over the edges and add them to the result set,
@@ -13,6 +13,8 @@ import { Graph, Matcher, Matching, NodeBase, ReadonlyGraph, Visualizer } from ".
  * Trivial cases where this does not produce the optimal result:
  * - Path of length 3, with the middle section having the most weight,
  *    but the sum of the weight of the other two edges is bigger
+ * 
+ * c.f. "A simple approximation algorithm for the weighted matching problem", Drake and Hougardy
  */
 export const GreedyMatcher: Matcher = function* GreedyMatcher(input: ReadonlyGraph, visualize?: Visualizer) {
     visualize?.step("1. Sort edges descending by weight in O(|E| log |E|)");
