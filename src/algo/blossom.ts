@@ -427,7 +427,7 @@ function checkDelta2(context: BlossomContext) {
             for (const p of context.neighbend[v]) {
                 const k = endpointToEdgeID(p);
                 const w = context.endpoint[p];
-                if (context.label[context.inblossom[w]] === 1) {
+                if (context.label[context.inblossom[w]] === Label.S_VERTEX) {
                     const d = slack(context, k);
                     if (bk === NoEdge || d < bd!) {
                         bk = k;
@@ -453,7 +453,7 @@ function checkDelta3(context: BlossomContext) {
     let tbk = NoEdge;
     let tbd = null;
     for (const b of allVerticesAndBlossoms(context)) {
-        if (context.blossomparent[b] === NoVertex && context.label[b] === 1) {
+        if (context.blossomparent[b] === NoVertex && context.label[b] === Label.S_VERTEX) {
             for (const v of blossomLeaves(context.nvertex, context.blossomchilds, b)) {
                 for (const p of context.neighbend[v]) {
                     const k = endpointToEdgeID(p);
@@ -474,7 +474,7 @@ function checkDelta3(context: BlossomContext) {
 
                 assert(context.inblossom[i] === b || context.inblossom[j] === b);
                 assert(context.inblossom[i] !== b || context.inblossom[j] !== b);
-                assert(context.label[context.inblossom[i]] === 1 && context.label[context.inblossom[j]] === 1);
+                assert(context.label[context.inblossom[i]] === Label.S_VERTEX && context.label[context.inblossom[j]] === Label.S_VERTEX);
                 if (tbk === NoEdge || slack(context, context.bestedge[b]) < tbd!) {
                     tbk = context.bestedge[b];
                     tbd = slack(context, context.bestedge[b]);
@@ -660,8 +660,8 @@ function addBlossom(queue: Queue, context: BlossomContext, base: VertexID, k: Ed
         path.push(bv);
         endps.push(context.labelend[bv]);
         assert(
-            context.label[bv] === 2 ||
-            (context.label[bv] === 1 && context.labelend[bv] === context.mate[context.blossombase[bv]]),
+            context.label[bv] === Label.T_VERTEX ||
+            (context.label[bv] === Label.S_VERTEX && context.labelend[bv] === context.mate[context.blossombase[bv]]),
         );
         // Trace one step back.
         assert(context.labelend[bv] >= 0);
@@ -681,8 +681,8 @@ function addBlossom(queue: Queue, context: BlossomContext, base: VertexID, k: Ed
         path.push(bw);
         endps.push(followEdge(context.labelend[bw]));
         assert(
-            context.label[bw] === 2 ||
-            (context.label[bw] === 1 && context.labelend[bw] === context.mate[context.blossombase[bw]]),
+            context.label[bw] === Label.T_VERTEX ||
+            (context.label[bw] === Label.S_VERTEX && context.labelend[bw] === context.mate[context.blossombase[bw]]),
         );
         // Trace one step back.
         assert(context.labelend[bw] >= 0);
@@ -698,7 +698,7 @@ function addBlossom(queue: Queue, context: BlossomContext, base: VertexID, k: Ed
     context.dualvar[b] = 0;
     // Relabel vertices.
     for (const v of blossomLeaves(context.nvertex, context.blossomchilds, b)) {
-        if (context.label[context.inblossom[v]] === 2) {
+        if (context.label[context.inblossom[v]] === Label.T_VERTEX) {
             // This T-vertex now turns into an S-vertex because it becomes
             // part of an S-blossom; add it to the queue.
             queue.push(v);
@@ -839,7 +839,7 @@ function expandBlossom(queue: Queue, context: BlossomContext, b: VertexID, endst
             // it is reachable from a neighbouring S-vertex outside the
             // expanding blossom.
             bv = context.blossomchilds[b]![j];
-            if (context.label[bv] === 1) {
+            if (context.label[bv] === Label.S_VERTEX) {
                 // This sub-blossom just got label S through one of its
                 // neighbours; leave it.
                 j += jstep;
@@ -850,7 +850,7 @@ function expandBlossom(queue: Queue, context: BlossomContext, b: VertexID, endst
                 if (context.label[v] === 0) continue;
                 // If the sub-blossom contains a reachable vertex, assign
                 // label T to the sub-blossom.
-                assert(context.label[v] === 2);
+                assert(context.label[v] === Label.T_VERTEX);
                 assert(context.inblossom[v] === bv);
                 context.label[v] = 0;
                 context.label[context.endpoint[context.mate[context.blossombase[bv]]]] = 0;
@@ -863,7 +863,7 @@ function expandBlossom(queue: Queue, context: BlossomContext, b: VertexID, endst
     }
 
     // Recycle the blossom number.
-    context.label[b] = -1;
+    context.label[b] = Label.CLEARED;
     context.labelend[b] = NoEndpoint;
     context.blossomchilds[b] = null;
     context.blossomendps[b] = null;
@@ -945,7 +945,7 @@ function augmentMatchingDirection(context: BlossomContext, s: VertexID, p: Endpo
     // edges as we go.
     while (true) {
         const bs = inblossom[s];
-        assert(label[bs] === 1);
+        assert(label[bs] === Label.S_VERTEX);
         assert(labelend[bs] === mate[blossombase[bs]]);
         // Augment through the S-blossom from s to base.
         if (bs >= nvertex) augmentBlossom(context, bs, s);
@@ -959,7 +959,7 @@ function augmentMatchingDirection(context: BlossomContext, s: VertexID, p: Endpo
 
         const t = endpoint[labelend[bs]];
         const bt = inblossom[t];
-        assert(label[bt] === 2);
+        assert(label[bt] === Label.T_VERTEX);
         // Trace one step back.
         assert(labelend[bt] >= 0);
         s = endpoint[labelend[bt]];
@@ -1055,7 +1055,7 @@ function maxWeightMatching(edges: Edge[]): [VertexID, VertexID][] {
             while (queue.length > 0 && !augmented) {
                 // Take an S vertex from the queue.
                 const v = queue.pop()!;
-                assert(context.label[context.inblossom[v]] === 1);
+                assert(context.label[context.inblossom[v]] === Label.S_VERTEX);
 
                 // Scan its neighbours:
                 const length = context.neighbend[v].length;
@@ -1078,11 +1078,11 @@ function maxWeightMatching(edges: Edge[]): [VertexID, VertexID][] {
                     }
 
                     if (context.allowedge[k]) {
-                        if (context.label[context.inblossom[w]] === 0) {
+                        if (context.label[context.inblossom[w]] === Label.NO_LABEL) {
                             // (C1) w is a free vertex;
                             // label w with T and label its mate with S (R12).
                             assignLabel(queue, context, w, Label.T_VERTEX, followEdge(p));
-                        } else if (context.label[context.inblossom[w]] === 1) {
+                        } else if (context.label[context.inblossom[w]] === Label.S_VERTEX) {
                             // (C2) w is an S-vertex (not in the same blossom);
                             // follow back-links to discover either an
                             // augmenting path or a new blossom.
@@ -1098,23 +1098,23 @@ function maxWeightMatching(edges: Edge[]): [VertexID, VertexID][] {
                                 augmented = true;
                                 break;
                             }
-                        } else if (context.label[w] === 0) {
+                        } else if (context.label[w] === Label.NO_LABEL) {
                             // W is inside a T-blossom, but w itthis has not
                             // yet been reached from outside the blossom;
                             // mark it as reached (we need this to relabel
                             // during T-blossom expansion).
-                            assert(context.label[context.inblossom[w]] === 2);
-                            context.label[w] = 2;
+                            assert(context.label[context.inblossom[w]] === Label.T_VERTEX);
+                            context.label[w] = Label.T_VERTEX;
                             context.labelend[w] = followEdge(p);
                         }
-                    } else if (context.label[context.inblossom[w]] === 1) {
+                    } else if (context.label[context.inblossom[w]] === Label.S_VERTEX) {
                         // Keep track of the least-slack non-allowable edge to
                         // a different S-blossom.
                         const b = context.inblossom[v];
                         if (context.bestedge[b] === NoEdge || kslack! < slack(context, context.bestedge[b]))
                             context.bestedge[b] = k;
                     } else if (
-                        context.label[w] === 0 && // W is a free vertex (or an unreached vertex inside
+                        context.label[w] === Label.NO_LABEL && // W is a free vertex (or an unreached vertex inside
                         // a T-blossom) but we can not reach it yet;
                         // keep track of the least-slack edge that reaches w.
                         (context.bestedge[w] === NoEdge || kslack! < slack(context, context.bestedge[w]))
@@ -1143,7 +1143,7 @@ function maxWeightMatching(edges: Edge[]): [VertexID, VertexID][] {
             // Compute delta2: the minimum slack on any edge between
             // an S-vertex and a free vertex.
             for (const v of allVertices(context)) {
-                if (context.label[context.inblossom[v]] === 0 && context.bestedge[v] !== -1) {
+                if (context.label[context.inblossom[v]] === Label.NO_LABEL && context.bestedge[v] !== NoEdge) {
                     d = slack(context, context.bestedge[v]);
                     if (d < delta!) {
                         delta = d;
@@ -1156,7 +1156,7 @@ function maxWeightMatching(edges: Edge[]): [VertexID, VertexID][] {
             // Compute delta3: half the minimum slack on any edge between
             // a pair of S-blossoms.
             for (const b of allVerticesAndBlossoms(context)) {
-                if (context.blossomparent[b] === -1 && context.label[b] === 1 && context.bestedge[b] !== -1) {
+                if (context.blossomparent[b] === NoVertex && context.label[b] === Label.S_VERTEX && context.bestedge[b] !== NoEdge) {
                     kslack = slack(context, context.bestedge[b]);
                     d = kslack / 2;
                     if (d < delta!) {
@@ -1170,9 +1170,9 @@ function maxWeightMatching(edges: Edge[]): [VertexID, VertexID][] {
             // Compute delta4: minimum z variable of any T-blossom.
             for (const b of allBlossoms(context)) {
                 if (
-                    context.blossombase[b] >= 0 &&
-                    context.blossomparent[b] === -1 &&
-                    context.label[b] === 2 &&
+                    context.blossombase[b] !== NoVertex &&
+                    context.blossomparent[b] === NoVertex &&
+                    context.label[b] === Label.T_VERTEX &&
                     (context.dualvar[b] < delta)
                 ) {
                     delta = context.dualvar[b];
@@ -1184,21 +1184,21 @@ function maxWeightMatching(edges: Edge[]): [VertexID, VertexID][] {
 
             // Update dual variables according to delta.
             for (const v of allVertices(context)) {
-                if (context.label[context.inblossom[v]] === 1) {
+                if (context.label[context.inblossom[v]] === Label.S_VERTEX) {
                     // S-vertex: 2*u = 2*u - 2*delta
                     context.dualvar[v] -= delta;
-                } else if (context.label[context.inblossom[v]] === 2) {
+                } else if (context.label[context.inblossom[v]] === Label.T_VERTEX) {
                     // T-vertex: 2*u = 2*u + 2*delta
                     context.dualvar[v] += delta;
                 }
             }
 
             for (const b of allBlossoms(context)) {
-                if (context.blossombase[b] >= 0 && context.blossomparent[b] === -1) {
-                    if (context.label[b] === 1) {
+                if (context.blossombase[b] !== NoVertex && context.blossomparent[b] === NoVertex) {
+                    if (context.label[b] === Label.S_VERTEX) {
                         // Top-level S-blossom: z = z + 2*delta
                         context.dualvar[b] += delta;
-                    } else if (context.label[b] === 2) {
+                    } else if (context.label[b] === Label.T_VERTEX) {
                         // Top-level T-blossom: z = z - 2*delta
                         context.dualvar[b] -= delta;
                     }
@@ -1214,13 +1214,13 @@ function maxWeightMatching(edges: Edge[]): [VertexID, VertexID][] {
                 context.allowedge[deltaedge] = true;
                 let i = edges[deltaedge][0];
                 if (context.label[context.inblossom[i]] === 0) i = edges[deltaedge][1];
-                assert(context.label[context.inblossom[i]] === 1);
+                assert(context.label[context.inblossom[i]] === Label.S_VERTEX);
                 queue.push(i);
             } else if (deltatype === DeltaType.DELTA3) {
                 // Use the least-slack edge to continue the search.
                 context.allowedge[deltaedge] = true;
                 const i = edges[deltaedge][0];
-                assert(context.label[context.inblossom[i]] === 1);
+                assert(context.label[context.inblossom[i]] === Label.S_VERTEX);
                 queue.push(i);
             } else {
                 // Expand the least-z blossom.
@@ -1238,9 +1238,9 @@ function maxWeightMatching(edges: Edge[]): [VertexID, VertexID][] {
         // End of a stage; expand all S-blossoms which have dualvar = 0.
         for (const b of allBlossoms(context)) {
             if (
-                context.blossomparent[b] === -1 &&
-                context.blossombase[b] >= 0 &&
-                context.label[b] === 1 &&
+                context.blossomparent[b] === NoVertex &&
+                context.blossombase[b] !== NoVertex &&
+                context.label[b] === Label.S_VERTEX &&
                 context.dualvar[b] === 0
             ) {
                 expandBlossom(queue, context, b, true);
