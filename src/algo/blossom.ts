@@ -83,6 +83,9 @@ export const BlossomMatcher: Matcher = function* GreedyMatcher(input: ReadonlyGr
 type VertexID = number & { _isVertexID: true };
 const NoVertex: VertexID = -1 as VertexID;
 
+function isBlossom(context: BlossomContext, id: VertexID) {
+    return id >= context.nvertex;
+}
 
 type Weight = number;
 type Edge = readonly [VertexID, VertexID, Weight];
@@ -764,7 +767,7 @@ function expandBlossom (queue: Queue, context: BlossomContext, b: VertexID, ends
         const s = context.blossomchilds[b]![i];
 
         context.blossomparent[s] = NoVertex;
-        if (s < context.nvertex) context.inblossom[s] = s;
+        if (!isBlossom(context, s)) context.inblossom[s] = s;
         else if (endstage && context.dualvar[s] === 0) {
             // Recursively expand this sub-blossom.
             expandBlossom(queue, context, s, endstage);
@@ -884,7 +887,7 @@ function augmentBlossom (context: BlossomContext, b: VertexID, v: VertexID) {
     let t = v;
     while (context.blossomparent[t] !== b) t = context.blossomparent[t];
     // Recursively deal with the first sub-blossom.
-    if (t >= context.nvertex) augmentBlossom(context, t, v);
+    if (isBlossom(context, t)) augmentBlossom(context, t, v);
     // Decide in which direction we will go round the blossom.
     j = context.blossomchilds[b]!.indexOf(t);
     const i = j;
@@ -907,11 +910,11 @@ function augmentBlossom (context: BlossomContext, b: VertexID, v: VertexID) {
         j += jstep;
         t = context.blossomchilds[b]![j];
         p = (context.blossomendps[b]![j - endptrick] ^ endptrick) as EndpointID;
-        if (t >= context.nvertex) augmentBlossom(context, t, context.endpoint[p]);
+        if (isBlossom(context, t)) augmentBlossom(context, t, context.endpoint[p]);
         // Step to the next sub-blossom and augment it recursively.
         j += jstep;
         t = context.blossomchilds[b]![Math.abs(j % length_)];
-        if (t >= context.nvertex) augmentBlossom(context, t, context.endpoint[followEdge(p)]);
+        if (isBlossom(context, t)) augmentBlossom(context, t, context.endpoint[followEdge(p)]);
         // Match the edge connecting those sub-blossoms.
         context.mate[context.endpoint[p]] = followEdge(p);
         context.mate[context.endpoint[followEdge(p)]] = p;
@@ -940,7 +943,6 @@ function augmentMatchingDirection(context: BlossomContext, s: VertexID, p: Endpo
     // Match vertex s to remote endpoint p. Then trace back from s
     // until we find a single vertex, swapping matched and unmatched
     // edges as we go.
-    // eslint-disable-next-line no-constant-condition
     while (true) {
         const bs = inblossom[s];
         assert(label[bs] === 1);
@@ -973,7 +975,13 @@ function augmentMatchingDirection(context: BlossomContext, s: VertexID, p: Endpo
     }
 };
 
-
+enum DeltaType {
+    NONE = -1,
+    DELTA1 = 1,
+    DELTA2 = 2,
+    DELTA3 = 3,
+    DELTA4 = 4
+}
 
 function maxWeightMatching(edges: Edge[]): [VertexID, VertexID][] {
 		// Vertices are numbered 0 .. (nvertex-1).
@@ -996,13 +1004,13 @@ function maxWeightMatching(edges: Edge[]): [VertexID, VertexID][] {
 		let queue: VertexID[] = [];
 
 
-		let d;
+		let d: number;
 		let kslack: number;
-		let base;
-		let deltatype;
-		let delta;
-		let deltaedge;
-		let deltablossom;
+		let base: VertexID;
+		let deltatype: DeltaType = DeltaType.NONE;
+		let delta: number;
+		let deltaedge: EdgeID = NoEdge;
+		let deltablossom: VertexID = NoVertex;
 
 		// Main loop: continue until no further improvement is possible.
 		for (const t of allVertices(context)) {
@@ -1079,7 +1087,7 @@ function maxWeightMatching(edges: Edge[]): [VertexID, VertexID][] {
 								// follow back-links to discover either an
 								// augmenting path or a new blossom.
 								base = scanBlossom(context, v, w);
-								if (base >= 0) {
+								if (base !== NoVertex) {
 									// Found a new blossom; add it to the blossom
 									// bookkeeping and turn it into an S-blossom.
 									addBlossom(queue, context, base, k);
@@ -1121,17 +1129,15 @@ function maxWeightMatching(edges: Edge[]): [VertexID, VertexID][] {
 				// compute delta and reduce slack in the optimization problem.
 				// (Note that our vertex dual variables, edge slacks and delta's
 				// are pre-multiplied by two.)
-				deltatype = -1;
-				delta = null;
-				deltaedge = null;
-				deltablossom = null;
-
+				
 				// Verify data structures for delta2/delta3 computation.
 				checkDelta2(context);
 				checkDelta3(context);
 
-				// Compute delta1: the minumum value of any vertex dual.
-				deltatype = 1;
+				// Compute delta1: the minimum value of any vertex dual.
+                deltaedge = NoEdge;
+				deltablossom = NoVertex;
+				deltatype = DeltaType.DELTA1;
 				delta = min(context.dualvar, 0, context.nvertex);
 
 				// Compute delta2: the minimum slack on any edge between
@@ -1139,9 +1145,9 @@ function maxWeightMatching(edges: Edge[]): [VertexID, VertexID][] {
 				for (const v of allVertices(context)) {
 					if (context.label[context.inblossom[v]] === 0 && context.bestedge[v] !== -1) {
 						d = slack(context, context.bestedge[v]);
-						if (deltatype === -1 || d < delta!) {
+						if (d < delta!) {
 							delta = d;
-							deltatype = 2;
+							deltatype = DeltaType.DELTA2;
 							deltaedge = context.bestedge[v];
 						}
 					}
@@ -1153,9 +1159,9 @@ function maxWeightMatching(edges: Edge[]): [VertexID, VertexID][] {
 					if (context.blossomparent[b] === -1 && context.label[b] === 1 && context.bestedge[b] !== -1) {
 						kslack = slack(context, context.bestedge[b]);
 						d = kslack / 2;
-						if (deltatype === -1 || d < delta!) {
+						if (d < delta!) {
 							delta = d;
-							deltatype = 3;
+							deltatype = DeltaType.DELTA3;
 							deltaedge = context.bestedge[b];
 						}
 					}
@@ -1167,10 +1173,10 @@ function maxWeightMatching(edges: Edge[]): [VertexID, VertexID][] {
 						context.blossombase[b] >= 0 &&
 						context.blossomparent[b] === -1 &&
 						context.label[b] === 2 &&
-						(deltatype === -1 || context.dualvar[b] < delta)
+						(context.dualvar[b] < delta)
 					) {
 						delta = context.dualvar[b];
-						deltatype = 4;
+						deltatype = DeltaType.DELTA4;
 						deltablossom = b;
 					}
 				}
@@ -1199,32 +1205,28 @@ function maxWeightMatching(edges: Edge[]): [VertexID, VertexID][] {
 					}
 				}
 
-				// Take action at the point where minimum delta occurred.
-				assert(
-					deltatype === 1 ||
-						deltatype === 2 ||
-						deltatype === 3 ||
-						deltatype === 4,
-				);
-				if (deltatype === 1) {
+				if (deltatype === DeltaType.DELTA1) {
 					// No further improvement possible; optimum reached.
 					break;
-				} else if (deltatype === 2) {
+				} else if (deltatype === DeltaType.DELTA2) {
+                    assert(deltaedge !== NoEdge);
 					// Use the least-slack edge to continue the search.
-					context.allowedge[deltaedge!] = true;
-					let i = edges[deltaedge!][0];
-					if (context.label[context.inblossom[i]] === 0) i = edges[deltaedge!][1];
+					context.allowedge[deltaedge] = true;
+					let i = edges[deltaedge][0];
+					if (context.label[context.inblossom[i]] === 0) i = edges[deltaedge][1];
 					assert(context.label[context.inblossom[i]] === 1);
 					queue.push(i);
-				} else if (deltatype === 3) {
+				} else if (deltatype === DeltaType.DELTA3) {
 					// Use the least-slack edge to continue the search.
-					context.allowedge[deltaedge!] = true;
-					const i = edges[deltaedge!][0];
+					context.allowedge[deltaedge] = true;
+					const i = edges[deltaedge][0];
 					assert(context.label[context.inblossom[i]] === 1);
 					queue.push(i);
 				} else {
 					// Expand the least-z blossom.
-					expandBlossom(queue, context, deltablossom!, false);
+                    assert(deltatype == DeltaType.DELTA4);
+                    assert(deltablossom !== NoVertex);
+					expandBlossom(queue, context, deltablossom, false);
 				}
 			}
 
