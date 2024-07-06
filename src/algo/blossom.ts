@@ -197,7 +197,7 @@ enum Label {
     NO_LABEL = 0,
     S_VERTEX = 1,
     T_VERTEX = 2,
-    SPECIAL = 5
+    BREADCRUMB = 5
 };
 
 type Mates = { [from: VertexID]: EndpointID; };
@@ -596,14 +596,14 @@ function scanBlossom(context: BlossomContext, v: VertexID, w: VertexID) {
     while (v !== NoVertex || w !== NoVertex) {
         // Look for a breadcrumb in v's blossom or put a new breadcrumb.
         let b = context.inblossom[v];
-        if (context.label[b] & 4) {
+        if (context.label[b] === Label.BREADCRUMB) {
             base = context.blossombase[b];
             break;
         }
 
         assert(context.label[b] === Label.S_VERTEX);
         path.push(b);
-        context.label[b] = Label.SPECIAL;
+        context.label[b] = Label.BREADCRUMB;
         // Trace one step back.
         assert(context.labelend[b] === context.mate[context.blossombase[b]]);
         if (context.labelend[b] === NoEndpoint) {
