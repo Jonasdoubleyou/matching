@@ -1,5 +1,5 @@
 import { ReactElement, createContext, useContext, useMemo, useRef, useState } from "react";
-import { Color, EdgeBase, EdgeID, NodeBase, Visualizer, edgeID, isEdge, isNode, nodeID } from "../algo";
+import { Color, ColorLegend, EdgeBase, EdgeID, NodeBase, Visualizer, edgeID, isEdge, isNode, nodeID } from "../algo";
 import { ColoringContext, ColoringCtx, emptyColoringContext } from "./Coloring";
 import { StandaloneNodeUI } from "./graph/StandaloneNode";
 import { StandaloneEdgeUI } from "./graph/StandaloneEdge";
@@ -79,20 +79,32 @@ export const useVisualizer = () => {
             activeState.current.currentNode = nodeID(node);
         }
 
-        function pickEdge(edge: EdgeBase, color: Color) {
+        function pickEdge(edge: EdgeBase, color: Color | null) {
             console.log('pickEdge', edge, color);
-            activeState.current.coloredEdges.set(edgeID(edge), color);
+            if (color)
+                activeState.current.coloredEdges.set(edgeID(edge), color);
+            else
+                activeState.current.coloredEdges.delete(edgeID(edge));
         }
 
-        function pickNode(node: NodeBase, color: Color) {
+        function pickNode(node: NodeBase, color: Color | null) {
             console.log('pickNode', node, color);
-            activeState.current.coloredNodes.set(nodeID(node), color);
+            if (color)
+                activeState.current.coloredNodes.set(nodeID(node), color);
+            else
+                activeState.current.coloredNodes.delete(nodeID(node));
+
         }
 
         function removeHighlighting() {
             activeState.current.coloredEdges.clear();
             activeState.current.coloredNodes.clear();
         }
+
+        function addLegend(legend: ColorLegend) {
+            activeState.current.legend = legend;
+        }
+
 
         return {
             step,
@@ -103,7 +115,8 @@ export const useVisualizer = () => {
             currentNode,
             pickEdge,
             pickNode,
-            removeHighlighting
+            removeHighlighting,
+            addLegend
         };
     }, [activeState, setStates]);
 

@@ -1,6 +1,8 @@
 import { EdgeBase, NodeBase, ReadonlyGraph } from "../../algo";
 import { Group } from '@visx/group';
-import { useEdgeColor, useNodeColor } from "../Coloring";
+import { useColorLegend, useEdgeColor, useNodeColor } from "../Coloring";
+
+import "./Graph.css";
 
 function NodeUI({ node, x, y, size }: { node: Readonly<NodeBase>, x: number, y: number, size: number }) {
     const color = useNodeColor(node);
@@ -73,10 +75,19 @@ function NodeCircle({ nodes, edges, size, x, y }: { nodes: readonly Readonly<Nod
 }
 
 export function GraphUI({ graph }: { graph: ReadonlyGraph }) {
+    const legend = useColorLegend();
+
     const width = 600;
     const height = 600;
 
-    return <svg width={width} height={height}>
-        <NodeCircle nodes={graph.nodes} edges={graph.edges} x={0} y={0} size={width} />
-    </svg>
+    return <div>
+        <svg width={width} height={height}>
+            <NodeCircle nodes={graph.nodes} edges={graph.edges} x={0} y={0} size={width} />
+        </svg>
+        <div className="legend">
+                {legend && Object.entries(legend).map(([color, description]) =>
+                    <div className="legend-entry"><div className="legend-marker" style={{ backgroundColor: color }} /> {description}</div>)}
+                <div className="legend-entry"><div className="legend-marker" style={{ backgroundColor: "green" }} /> current node / edge</div>
+        </div>
+    </div>;
 }

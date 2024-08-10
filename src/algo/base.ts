@@ -53,20 +53,22 @@ export function nodeID(node: NodeBase): NodeID {
 
 // ----------------- Matching Algorithm -------------
 
-export type Color = "blue" | "green" | "red";
+export type Color = "blue" | "green" | "red" | "yellow";
+export type ColorLegend = { [color in Color]?: string };
 
 export interface Visualizer {
     step(name: string): void;
     message(name: string): void;
 
     data(name: string, data: any): void;
+    addLegend(legend: ColorLegend): void;
 
     // Highlight nodes in the input Graph
     currentEdge(edge: EdgeBase): void;
     currentNode(node: NodeBase): void;
 
-    pickEdge(edge: EdgeBase, color: Color): void;
-    pickNode(edge: NodeBase, color: Color): void;
+    pickEdge(edge: EdgeBase, color: Color | null): void;
+    pickNode(edge: NodeBase, color: Color | null): void;
 
     removeHighlighting(): void;
 

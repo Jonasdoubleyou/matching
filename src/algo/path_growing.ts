@@ -12,6 +12,11 @@ import { Matcher, Matching, ReadonlyGraph, Visualizer, getScore } from "./base";
  * c.f. "A simple approximation algorithm for the weighted matching problem", Drake and Hougardy
  */
 export const PathGrowingMatcher: Matcher = function* PathGrowingMatcher(input: ReadonlyGraph, visualize?: Visualizer) {
+    visualize?.addLegend({
+        "blue": "matching one",
+        "red": "matching two",
+    });
+
     const solutionOne: Matching = [];
     visualize?.data("solution one", solutionOne);
     const solutionTwo: Matching = [];

@@ -16,6 +16,7 @@ For development, install NodeJS + NPM, then run `npm ci` and `npm start` to get 
   - `./naive` contains a naive algorithm that tries all permutations (exponential runtime to the number of nodes)
   - `./greedy` contains a greedy matcher
   - `./path_growing` contains the path growing algorithm as presented by Drake and Hougardy
+  - `./path_growing_patched` contains the path growing algorithm, implementing the adaption mentioned in the "additional remarks"
   - `./blossom` contains "some" implementation of a Blossom algorithm as presented by Edmonds, with ideas from Gabow and Galil
 - `src/test` contains a small testsuite (work in progress)
 - `src/ui` contains the user interface (as React components)

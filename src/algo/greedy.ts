@@ -17,6 +17,10 @@ import { Graph, Matcher, Matching, NodeBase, ReadonlyGraph, Visualizer } from ".
  * c.f. "A simple approximation algorithm for the weighted matching problem", Drake and Hougardy
  */
 export const GreedyMatcher: Matcher = function* GreedyMatcher(input: ReadonlyGraph, visualize?: Visualizer) {
+    visualize?.addLegend({
+        "blue": "solution"
+    });
+
     visualize?.step("1. Sort edges descending by weight in O(|E| log |E|)");
     visualize?.data("Edges by weight", input.edges);
     yield;

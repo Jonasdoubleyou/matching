@@ -7,6 +7,12 @@ import { Matcher, Matching, ReadonlyGraph, Visualizer, getScore } from "./base";
  * and not overall.
  */
 export const PathGrowingPatchedMatcher: Matcher = function* PathGrowingMatcher(input: ReadonlyGraph, visualize?: Visualizer) {
+    visualize?.addLegend({
+        "blue": "matching one",
+        "red": "matching two",
+        "yellow": "solution"
+    });
+
     const solutionOne: Matching = [];
     visualize?.data("solution one", solutionOne);
     const solutionTwo: Matching = [];
@@ -60,10 +66,26 @@ export const PathGrowingPatchedMatcher: Matcher = function* PathGrowingMatcher(i
         const twoScore = getScore(solutionTwo);
         if (oneScore > twoScore) {
             visualize?.step(`3. Pick solution one as it has better score (${oneScore} vs ${twoScore}))`);
+            if (visualize) {
+                for (const edge of solutionOne) {
+                    visualize.pickEdge(edge, 'yellow');
+                }
+                for (const edge of solutionTwo) {
+                    visualize.pickEdge(edge, null);
+                }
+            }
             result.push(...solutionOne.splice(0));
             solutionTwo.splice(0);
         } else {
             visualize?.step(`3. Pick solution two as it has better score (${twoScore} vs ${oneScore}))`);
+            if (visualize) {
+                for (const edge of solutionOne) {
+                    visualize.pickEdge(edge, null);
+                }
+                for (const edge of solutionTwo) {
+                    visualize.pickEdge(edge, 'yellow');
+                }
+            }
             result.push(...solutionTwo.splice(0));
             solutionOne.splice(0);
         }

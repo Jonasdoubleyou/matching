@@ -1,0 +1,17 @@
+
+.legend {
+
+}
+
+.legend-entry {
+    display: flex;
+}
+
+.legend-marker {
+    margin: 2px;
+    margin-right: 10px;
+    display: block;
+    width: 20px;
+    height: 20px;
+    border-radius: 10px;
+}

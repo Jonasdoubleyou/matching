@@ -1,7 +1,9 @@
 import { createContext, useContext } from "react";
-import { Color, EdgeBase, EdgeID, NodeBase, NodeID, edgeID, nodeID } from "../algo";
+import { Color, ColorLegend, EdgeBase, EdgeID, NodeBase, NodeID, edgeID, nodeID } from "../algo";
 
 export interface ColoringContext {
+    legend?: ColorLegend;
+
     coloredEdges: Map<EdgeID, Color>;
     coloredNodes: Map<NodeID, Color>;
     
@@ -26,4 +28,9 @@ export const useNodeColor = (node: NodeBase) => {
     const ctx = useContext(ColoringCtx);
     if (ctx.currentNode === nodeID(node)) return "lightgreen";
     return ctx.coloredNodes.get(nodeID(node)) ?? "var(--secondary)";
+}
+
+export const useColorLegend = () => {
+    const ctx = useContext(ColoringCtx);
+    return ctx.legend;
 }
