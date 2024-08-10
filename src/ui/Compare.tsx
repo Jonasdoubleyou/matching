@@ -4,14 +4,15 @@ import { IconButton } from "./base/Icons";
 import { generateRandomMission } from "../test/random";
 import { Column, Row, Spacer } from "./base/Layout";
 import { Chart, registerables } from 'chart.js';
-import { Scatter } from "react-chartjs-2";
+import { Bar, Scatter } from "react-chartjs-2";
 Chart.register(...registerables);
+
+const Graph = Scatter;
 
 interface BenchmarkRun {
     name: string;
     nodeCount: number;
     edgeRate: number;
-    matchers: MatcherName[];
     repeat: number;
     randomRepeat: number;
 }
@@ -19,17 +20,18 @@ interface BenchmarkRun {
 interface Benchmark {
     name: string;
     runs: BenchmarkRun[];
+    matchers: MatcherName[];
 }
 
 const benchmarks: Benchmark[] = [
     {
         name: "Growing number of edges / Sparse",
+        matchers: matcherNames,
         runs: [
             {
                 name: "1% edge rate",
                 nodeCount: 100,
                 edgeRate: 1,
-                matchers: matcherNames,
                 randomRepeat: 5,
                 repeat: 1
             },
@@ -37,7 +39,6 @@ const benchmarks: Benchmark[] = [
                 name: "2% edge rate",
                 nodeCount: 100,
                 edgeRate: 2,
-                matchers: matcherNames,
                 randomRepeat: 5,
                 repeat: 1
             },
@@ -45,7 +46,6 @@ const benchmarks: Benchmark[] = [
                 name: "3% edge rate",
                 nodeCount: 100,
                 edgeRate: 3,
-                matchers: matcherNames,
                 randomRepeat: 5,
                 repeat: 1
             },
@@ -53,7 +53,6 @@ const benchmarks: Benchmark[] = [
                 name: "4% edge rate",
                 nodeCount: 100,
                 edgeRate: 4,
-                matchers: matcherNames,
                 randomRepeat: 5,
                 repeat: 1
             },
@@ -61,7 +60,6 @@ const benchmarks: Benchmark[] = [
                 name: "5% edge rate",
                 nodeCount: 100,
                 edgeRate: 5,
-                matchers: matcherNames,
                 randomRepeat: 5,
                 repeat: 1
             },
@@ -69,7 +67,6 @@ const benchmarks: Benchmark[] = [
                 name: "10% edge rate",
                 nodeCount: 100,
                 edgeRate: 10,
-                matchers: matcherNames,
                 randomRepeat: 5,
                 repeat: 1
             },
@@ -79,12 +76,12 @@ const benchmarks: Benchmark[] = [
 
     {
         name: "Growing number of edges (small)",
+        matchers: matcherNames,
         runs: [
             {
                 name: "10% edge rate",
                 nodeCount: 20,
                 edgeRate: 10,
-                matchers: matcherNames,
                 randomRepeat: 5,
                 repeat: 1
             },
@@ -92,7 +89,6 @@ const benchmarks: Benchmark[] = [
                 name: "20% edge rate",
                 nodeCount: 20,
                 edgeRate: 20,
-                matchers: matcherNames,
                 randomRepeat: 5,
                 repeat: 1
             },
@@ -100,7 +96,6 @@ const benchmarks: Benchmark[] = [
                 name: "30% edge rate",
                 nodeCount: 20,
                 edgeRate: 30,
-                matchers: matcherNames,
                 randomRepeat: 5,
                 repeat: 1
             },
@@ -108,7 +103,6 @@ const benchmarks: Benchmark[] = [
                 name: "40% edge rate",
                 nodeCount: 20,
                 edgeRate: 40,
-                matchers: matcherNames,
                 randomRepeat: 5,
                 repeat: 1
             }
@@ -118,37 +112,34 @@ const benchmarks: Benchmark[] = [
 
     {
         name: "Growing number of edges / Interconnected",
+        matchers: ["BlossomMatcher", "GreedyMatcher", "PathGrowingMatcher", "PathGrowingPatchedMatcher"],
         runs: [
             {
                 name: "60% edge rate",
                 nodeCount: 100,
                 edgeRate: 60,
-                matchers: ["BlossomMatcher", "GreedyMatcher", "PathGrowingMatcher"],
-                randomRepeat: 5,
+                randomRepeat: 20,
                 repeat: 1
             },
             {
                 name: "70% edge rate",
                 nodeCount: 100,
                 edgeRate: 70,
-                matchers: ["BlossomMatcher", "GreedyMatcher", "PathGrowingMatcher"],
-                randomRepeat: 5,
+                randomRepeat: 20,
                 repeat: 1
             },
             {
                 name: "80% edge rate",
                 nodeCount: 100,
                 edgeRate: 80,
-                matchers: ["BlossomMatcher", "GreedyMatcher", "PathGrowingMatcher"],
-                randomRepeat: 5,
+                randomRepeat: 20,
                 repeat: 1
             },
             {
                 name: "100% edge rate",
                 nodeCount: 100,
                 edgeRate: 100,
-                matchers: ["BlossomMatcher", "GreedyMatcher", "PathGrowingMatcher"],
-                randomRepeat: 5,
+                randomRepeat: 20,
                 repeat: 1
             }
 
@@ -211,7 +202,7 @@ export function CompareUI({ exit }: { exit: () => void }) {
 
                     const partResults = [];
 
-                    for (const matcherName of benchmarkRun.matchers) {
+                    for (const matcherName of benchmark.matchers) {
                         for (let repeat = 0; repeat < benchmarkRun.repeat; repeat++) {
                             if (running.current !== currentRun) return;
 
@@ -335,34 +326,36 @@ export function CompareUI({ exit }: { exit: () => void }) {
             <Spacer />
             <Column grow>
             <h2>Performance Ratio</h2>
-            {results.length > 0 && <Scatter data={{ datasets: matcherNames.map(matcher => ({
+            {results.length > 0 && <Graph data={{ datasets: matcherNames.map(matcher => ({
                 label: matcher,
                 data: results.filter(it => it.matcher === matcher).map(it => ({ x: it.benchmarkRun.name, y: it.performanceRatio })),
-             })) }} options={{
+             })).filter(it => it.data.length) }} options={{
                 scales: {
                     x: {
                       type: 'category',
                     },
                     y: {
                         type: 'linear',
-                        position: 'left'
+                        position: 'left',
+                        beginAtZero: false
                       }
                   }
             }} />}
             </Column>
             <Column grow>
             <h2>Runtime</h2>
-            {results.length > 0 && <Scatter data={{ datasets: matcherNames.map(matcher => ({
+            {results.length > 0 && <Graph data={{ datasets: matcherNames.map(matcher => ({
                 label: matcher,
                 data: results.filter(it => it.matcher === matcher).map(it => ({ x: it.benchmarkRun.name, y: it.runtime })),
-             })) }} options={{
+             })).filter(it => it.data.length) }} options={{
                 scales: {
                     x: {
                       type: 'category',
                     },
                     y: {
-                        type: 'logarithmic',
-                        position: 'left'
+                        type: 'linear',
+                        position: 'left',
+                        beginAtZero: false
                       }
                   }
             }} />}
@@ -370,17 +363,18 @@ export function CompareUI({ exit }: { exit: () => void }) {
 
             <Column grow>
             <h2>Steps</h2>
-            {results.length > 0 && <Scatter data={{ datasets: matcherNames.map(matcher => ({
+            {results.length > 0 && <Graph data={{ datasets: matcherNames.map(matcher => ({
                 label: matcher,
                 data: results.filter(it => it.matcher === matcher).map(it => ({ x: it.benchmarkRun.name, y: it.steps })),
-             })) }} options={{
+             })).filter(it => it.data.length) }} options={{
                 scales: {
                     x: {
                       type: 'category',
                     },
                     y: {
-                        type: 'logarithmic',
-                        position: 'left'
+                        type: 'linear',
+                        position: 'left',
+                        beginAtZero: false
                       }
                   }
             }} />}
