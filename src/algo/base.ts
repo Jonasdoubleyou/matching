@@ -61,11 +61,13 @@ export interface Visualizer {
     message(name: string): void;
 
     data(name: string, data: any): void;
+    mapData(name: string, mapping: (data: any) => any): void;
+
     addLegend(legend: ColorLegend): void;
 
     // Highlight nodes in the input Graph
-    currentEdge(edge: EdgeBase): void;
-    currentNode(node: NodeBase): void;
+    currentEdge(edge: EdgeBase | null): void;
+    currentNode(node: NodeBase | null): void;
 
     pickEdge(edge: EdgeBase, color: Color | null): void;
     pickNode(edge: NodeBase, color: Color | null): void;

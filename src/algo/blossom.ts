@@ -28,6 +28,50 @@ export const BlossomMatcher: Matcher = function* GreedyMatcher(input: ReadonlyGr
     for (const [id, node] of input.nodes.entries())
         nodeIds.set(node, id as VertexID);
 
+    visualize?.addLegend({
+        blue: "S-Vertex",
+        red: "T-Vertex",
+        yellow: "solution"
+    });
+    visualize?.mapData("allowedge", (it) => {
+        const allowedEdges = new Set<EdgeBase>();
+        for (const [edgeID, allowed] of Object.entries(it)) {
+            if (allowed) {
+                allowedEdges.add(input.edges[+edgeID]);
+            }
+        }
+
+        return allowedEdges;
+    });
+    visualize?.mapData("queue", it => it.map((id: number) => input.nodes[id]));
+    /* visualize?.mapData("mate", it => {
+        const mates = new Map<NodeBase, NodeBase>();
+        for (const [nodeId, mateId] of it.entries()) {
+
+        }
+    }); */
+    visualize?.mapData("dualvar", it => {
+        const dualvar = new Map<NodeBase, number>();
+        for (const [nodeId, dual] of it.entries()) {
+            if (dual !== 0)
+                dualvar.set(input.nodes[nodeId] ?? nodeId, dual);
+        }
+        return dualvar;
+    });
+
+    visualize?.mapData("blossomparent", it => {
+        const blossomparent = new Map<NodeBase, NodeBase>();
+        for (const [nodeId, blossomID] of it.entries()) {
+            if (blossomID !== -1) {
+                blossomparent.set(input.nodes[nodeId] ?? nodeId, input.nodes[blossomID] ?? blossomID);
+            }
+        }
+        return blossomparent;
+    });
+
+    // visualize?.data("nodesIDs", nodeIds);
+    // visualize?.data("edgeIDs", input.edges);
+
     // Edges as triple [source node id, target node id, weight]
     const edges: Edge[] = [];
 
@@ -49,12 +93,14 @@ export const BlossomMatcher: Matcher = function* GreedyMatcher(input: ReadonlyGr
     // ---------------- Run ----------------------------------
 
     // Run the actual algorithm:
-    const resultMates = maxWeightMatching(edges);
+    const resultMates = yield* maxWeightMatching(edges, input, visualize);
     console.log("result", resultMates);
 
     // ---------------- Decompress Result -------------------
     const matching: Matching = [];
     const inMatching = new Set<VertexID>();
+
+    visualize?.removeHighlighting();
 
     // Remap the output structure to a Matching of our interface
     for (const [from, to] of resultMates) {
@@ -70,6 +116,7 @@ export const BlossomMatcher: Matcher = function* GreedyMatcher(input: ReadonlyGr
         assert(decompressedEdge);
 
         matching.push(decompressedEdge!);
+        visualize?.pickEdge(decompressedEdge!, 'yellow');
     }
     return matching;
 }
@@ -304,6 +351,10 @@ interface BlossomContext {
     // problem; if allowedge[k] is false, the edge's slack may or may not
     // be zero.	
     allowedge: { [edge: EdgeID]: boolean } & boolean[];
+
+    // For visualization:
+    visualize?: Visualizer;
+    originalGraph: OriginalGraph;
 }
 
 function* allEdges(context: BlossomContext): Generator<EdgeID> {
@@ -326,7 +377,7 @@ function* allVerticesAndBlossoms(context: BlossomContext): Generator<VertexID> {
         yield i as VertexID;
 }
 
-function buildContext(edges: Edge[]): BlossomContext {
+function buildContext(edges: Edge[], originalGraph: OriginalGraph, visualize?: Visualizer): BlossomContext {
     // Count vertices + find the maximum edge weight.
     const nedge = edges.length;
     let nvertex: VertexID = 0 as VertexID;
@@ -399,7 +450,9 @@ function buildContext(edges: Edge[]): BlossomContext {
         label,
         labelend,
         unusedblossoms,
-        allowedge
+        allowedge,
+        originalGraph,
+        visualize
     }
 }
 
@@ -571,6 +624,9 @@ function assignLabel(queue: Queue, context: BlossomContext, w: VertexID, t: Labe
     context.labelend[b] = p;
     context.bestedge[w] = NoEdge;
     context.bestedge[b] = NoEdge;
+
+    context.visualize?.pickNode(context.originalGraph.nodes[w], t === Label.S_VERTEX ? 'blue' : 'red');
+
     if (t === Label.S_VERTEX) {
         // B became an S-vertex/blossom; add it(s vertices) to the queue.
         for (const v of blossomLeaves(context.nvertex, context.blossomchilds, b)) {
@@ -951,6 +1007,8 @@ function augmentMatchingDirection(context: BlossomContext, s: VertexID, p: Endpo
         if (bs >= nvertex) augmentBlossom(context, bs, s);
         // Update mate[s]
         mate[s] = p;
+        context.visualize?.pickEdge(context.originalGraph.edges[endpointToEdgeID(p)], 'yellow');
+
         // Trace one step back.
         if (labelend[bs] === NoEndpoint) {
             // Reached single vertex; stop.
@@ -983,7 +1041,12 @@ enum DeltaType {
     DELTA4 = 4
 }
 
-function maxWeightMatching(edges: Edge[]): [VertexID, VertexID][] {
+type OriginalGraph = {
+    nodes: { [id: VertexID]: NodeBase };
+    edges: { [id: EdgeID]: EdgeBase };
+};
+
+function* maxWeightMatching(edges: Edge[], originalGraph: OriginalGraph, visualize?: Visualizer): Generator<void, [VertexID, VertexID][]> {
     // Vertices are numbered 0 .. (nvertex-1).
     // Non-trivial blossoms are numbered nvertex .. (2*nvertex-1)
     //
@@ -997,11 +1060,29 @@ function maxWeightMatching(edges: Edge[]): [VertexID, VertexID][] {
     // Deal swiftly with empty graphs.
     if (edges.length === 0) return [];
 
-    const context = buildContext(edges);
+    const context = buildContext(edges, originalGraph, visualize);
 
+    if (visualize) {
+        visualize.data("allowedge", context.allowedge);
+        // Too tricky to visualize:
+        // visualize.data("bestedge", context.bestedge);
+        visualize.data("dualvar", context.dualvar);
+        // Already covered through coloring:
+        // visualize.data("label", context.label);
+        
+        // TODO: Resolve endpoint IDs?
+        // visualize.data("mate", context.mate);
+
+        // Duplicates blossomparent:
+        // visualize.data("blossombase", context.blossombase);
+        visualize.data("blossomparent", context.blossomparent);
+        // ...
+        
+    }
 
     // Queue of newly discovered S-vertices.
     let queue: VertexID[] = [];
+    visualize?.data("queue", queue);
 
 
     let d: number;
@@ -1030,7 +1111,7 @@ function maxWeightMatching(edges: Edge[]): [VertexID, VertexID][] {
         context.allowedge.fill(false);
 
         // Make queue empty.
-        queue = [];
+        queue.splice(0);
 
         // Label single blossoms/vertices with S and put them in the queue.
         for (const v of allVertices(context)) {
@@ -1055,6 +1136,11 @@ function maxWeightMatching(edges: Edge[]): [VertexID, VertexID][] {
             while (queue.length > 0 && !augmented) {
                 // Take an S vertex from the queue.
                 const v = queue.pop()!;
+                visualize?.step(`Process Vertex ${originalGraph.nodes[v].id ?? v}`);
+                visualize?.currentNode(originalGraph.nodes[v]);
+                visualize?.currentEdge(null);
+                yield;
+
                 assert(context.label[context.inblossom[v]] === Label.S_VERTEX);
 
                 // Scan its neighbours:
@@ -1063,6 +1149,8 @@ function maxWeightMatching(edges: Edge[]): [VertexID, VertexID][] {
                     const p = context.neighbend[v][i];
                     const k = endpointToEdgeID(p);
                     const w = context.endpoint[p];
+                    visualize?.currentNode(originalGraph.nodes[v]);
+                    visualize?.currentEdge(originalGraph.edges[k]);
                     // W is a neighbour to v
                     if (context.inblossom[v] === context.inblossom[w]) {
                         // This edge is internal to a blossom; ignore it
@@ -1081,6 +1169,9 @@ function maxWeightMatching(edges: Edge[]): [VertexID, VertexID][] {
                         if (context.label[context.inblossom[w]] === Label.NO_LABEL) {
                             // (C1) w is a free vertex;
                             // label w with T and label its mate with S (R12).
+                            visualize?.message(`Vertex ${originalGraph.nodes[w].id ?? w} is a free-vertex, relabel it as T-Vertex`);
+                            yield;
+
                             assignLabel(queue, context, w, Label.T_VERTEX, followEdge(p));
                         } else if (context.label[context.inblossom[w]] === Label.S_VERTEX) {
                             // (C2) w is an S-vertex (not in the same blossom);
@@ -1088,12 +1179,18 @@ function maxWeightMatching(edges: Edge[]): [VertexID, VertexID][] {
                             // augmenting path or a new blossom.
                             base = scanBlossom(context, v, w);
                             if (base !== NoVertex) {
+                                visualize?.message(`Found a blossom from edge ${originalGraph.edges[k].from.id} - ${originalGraph.edges[k].to.id}`);
+                                yield;
+
                                 // Found a new blossom; add it to the blossom
                                 // bookkeeping and turn it into an S-blossom.
                                 addBlossom(queue, context, base, k);
                             } else {
                                 // Found an augmenting path; augment the
                                 // matching and end this stage.
+                                visualize?.message(`Augment matching from edge ${originalGraph.edges[k].from.id} - ${originalGraph.edges[k].to.id}`);
+                                yield;
+
                                 augmentMatching(context, k);
                                 augmented = true;
                                 break;
@@ -1106,6 +1203,9 @@ function maxWeightMatching(edges: Edge[]): [VertexID, VertexID][] {
                             assert(context.label[context.inblossom[w]] === Label.T_VERTEX);
                             context.label[w] = Label.T_VERTEX;
                             context.labelend[w] = followEdge(p);
+
+                            visualize?.message(`Mark Vertex ${originalGraph.nodes[w].id ?? w} as T-Vertex`);
+                            yield;
                         }
                     } else if (context.label[context.inblossom[w]] === Label.S_VERTEX) {
                         // Keep track of the least-slack non-allowable edge to
@@ -1210,6 +1310,10 @@ function maxWeightMatching(edges: Edge[]): [VertexID, VertexID][] {
                 break;
             } else if (deltatype === DeltaType.DELTA2) {
                 assert(deltaedge !== NoEdge);
+
+                visualize?.message(`Delta2 adjustment by ${delta}, continuing with Edge ${originalGraph.edges[deltaedge].from.id} - ${originalGraph.edges[deltaedge].to.id}`);
+                yield;
+
                 // Use the least-slack edge to continue the search.
                 context.allowedge[deltaedge] = true;
                 let i = edges[deltaedge][0];
@@ -1218,6 +1322,10 @@ function maxWeightMatching(edges: Edge[]): [VertexID, VertexID][] {
                 queue.push(i);
             } else if (deltatype === DeltaType.DELTA3) {
                 // Use the least-slack edge to continue the search.
+
+                visualize?.message(`Delta3 adjustment by ${delta}, continuing with Edge ${originalGraph.edges[deltaedge].from.id} - ${originalGraph.edges[deltaedge].to.id}`);
+                yield;
+
                 context.allowedge[deltaedge] = true;
                 const i = edges[deltaedge][0];
                 assert(context.label[context.inblossom[i]] === Label.S_VERTEX);
@@ -1226,6 +1334,10 @@ function maxWeightMatching(edges: Edge[]): [VertexID, VertexID][] {
                 // Expand the least-z blossom.
                 assert(deltatype == DeltaType.DELTA4);
                 assert(deltablossom !== NoVertex);
+
+                visualize?.message(`Delta4 adjustment by ${delta}, expanding blossom ${deltablossom}`);
+                yield;
+
                 expandBlossom(queue, context, deltablossom, false);
             }
         }
@@ -1247,6 +1359,9 @@ function maxWeightMatching(edges: Edge[]): [VertexID, VertexID][] {
             }
         }
     }
+
+    visualize?.currentEdge(null);
+    visualize?.currentNode(null);
 
     // Verify that we reached the optimum solution.
     verifyOptimum(context);

@@ -15,21 +15,31 @@ interface DataContext {
     data: DataMap;
 }
 
+interface ImmutableContext {
+    mappings: Map<string, (data: any) => any>;
+}
+
 const emptyDataContext = {
     data: new Map()
 };
 
 const DataCtx = createContext<DataContext>(emptyDataContext);
+const ImmutableCtx = createContext<ImmutableContext>({
+    mappings: new Map()
+});
 
 interface VisualizerState extends ColoringContext, DataContext {}
 
 const MAX_UNDO_STATES = 100;
 
-export const useVisualizer = () => {
+export function useVisualizer(): { states: VisualizerState[], immutableContext: ImmutableContext, visualizer: Visualizer } {
     const activeState = useRef<VisualizerState>({
         coloredEdges: new Map(),
         coloredNodes: new Map(),
         data: new Map(),
+    });
+    const immutableState = useRef<ImmutableContext>({
+        mappings: new Map()
     });
 
     const [states, setStates] = useState<VisualizerState[]>([]);
@@ -69,14 +79,24 @@ export const useVisualizer = () => {
             activeState.current.data.set(name, data);
         }
 
-        function currentEdge(edge: EdgeBase) {
-            console.log('currentEdge', edge);
-            activeState.current.currentEdge = edgeID(edge);
+        function mapData(name: string, mapping: (data: any) => any) {
+            immutableState.current.mappings.set(name, mapping);
         }
 
-        function currentNode(node: NodeBase) {
+        function currentEdge(edge: EdgeBase | null) {
+            console.log('currentEdge', edge);
+            if (edge)
+                activeState.current.currentEdge = edgeID(edge);
+            else
+                activeState.current.currentEdge = undefined;
+        }
+
+        function currentNode(node: NodeBase | null) {
             console.log('currentNode', node);
-            activeState.current.currentNode = nodeID(node);
+            if (node)
+                activeState.current.currentNode = nodeID(node);
+            else
+                activeState.current.currentNode = undefined;
         }
 
         function pickEdge(edge: EdgeBase, color: Color | null) {
@@ -110,18 +130,21 @@ export const useVisualizer = () => {
             step,
             message,
             data,
+            mapData,
             commit,
             currentEdge,
             currentNode,
             pickEdge,
             pickNode,
             removeHighlighting,
-            addLegend
+            addLegend,
+            immutableState
         };
     }, [activeState, setStates]);
 
     return {
         states,
+        immutableContext: immutableState.current,
         visualizer,
     }
 };
@@ -193,20 +216,28 @@ function ArrayUI({ array }: { array: any[] }) {
     </div>;
 }
 
-export function VisualizeContext({ state, children }: React.PropsWithChildren<{ state: VisualizerState }>) {
+export function VisualizeContext({ state, immutableContext, children }: React.PropsWithChildren<{ state: VisualizerState, immutableContext: ImmutableContext }>) {
     return <DataCtx.Provider value={state ?? emptyDataContext}>
-        <ColoringCtx.Provider value={state ?? emptyColoringContext}>
-            {children}
-        </ColoringCtx.Provider>
+        <ImmutableCtx.Provider value={immutableContext}>
+            <ColoringCtx.Provider value={state ?? emptyColoringContext}>
+                {children}
+            </ColoringCtx.Provider>
+        </ImmutableCtx.Provider>
     </DataCtx.Provider>;
 }
 
 export function StateUI() {
     const { data } = useContext(DataCtx);
+    const { mappings } = useContext(ImmutableCtx);
+
+    const mappedData = useMemo(() => {
+        return [...data.entries()].map(([name, it]) => 
+            [name, (mappings.has(name) ? mappings.get(name)!(it) : it)]);
+    }, [data, mappings]);
 
     const graphs: ReactElement[] = [];
 
-    for (let [name, value] of data.entries()) {
+    for (let [name, value] of mappedData) {
         if (typeof value === "object") {
             if (value instanceof Set) {
                 graphs.push(<DataEntry name={name}>

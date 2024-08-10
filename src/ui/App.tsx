@@ -93,7 +93,7 @@ function initRun(run: MatchRun, visualizer: Visualizer): MatchRunState {
 }
 
 function RunUI({ run, exit }: { run: MatchRun, exit: () => void }) {
-    const { visualizer, states } = useVisualizer();
+    const { visualizer, states, immutableContext } = useVisualizer();
     const [undoCount, setUndoCount] = useState(0);
 
     const [result, setResult] = useState<{ step: number, result?: Matching }>({ step: 0 });
@@ -192,7 +192,7 @@ function RunUI({ run, exit }: { run: MatchRun, exit: () => void }) {
 
         <Row>
             <Spacer />
-            <VisualizeContext state={currentState}>
+            <VisualizeContext state={currentState} immutableContext={immutableContext}>
                 <Column grow>
                     <h2>Graph</h2>
                     <GraphUI graph={run.mission.input} />
