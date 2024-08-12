@@ -209,6 +209,7 @@ export function CompareUI({ exit }: { exit: () => void }) {
                             setStatus(`${benchmarkRun.name} - ${randomRepeat + 1} / ${benchmarkRun.randomRepeat} - ${matcherName} - ${repeat +1} / ${benchmarkRun.repeat}`);
                             await new Promise(res => setTimeout(res, 50));
 
+                            console.log(`Run ${matcherName}`);
                             const data = await run(mission.input, matchers[matcherName]);
 
                             const result = {

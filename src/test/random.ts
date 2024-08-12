@@ -7,7 +7,7 @@ export function generateRandomMission(nodeCount: number, edgeRate: number) {
         edges: []
     };
 
-    graph.nodes = Array.from({ length: nodeCount }, (_, i) => ({ id: i + 1 }));
+    graph.nodes = Array.from({ length: nodeCount }, (_, i) => ({ id: i }));
 
     for (let a = 0; a < nodeCount; a++) {
         for (let b = a + 1; b < nodeCount; b++) {
