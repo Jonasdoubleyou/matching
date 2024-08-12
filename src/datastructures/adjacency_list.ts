@@ -4,7 +4,6 @@ import { assert } from "../util/assert";
 // Compact representation of a graph as an adjacency list
 export class AdjacencyList<Node extends NodeBase, Edge extends EdgeBase<Node>> {
     adjacencyList: (Readonly<Edge>[] | undefined)[] = [];
-    count = 0;
     graph?: ReadonlyGraph;
 
     *fill(graph: ReadonlyGraph<Node, Edge>, visualize?: Visualizer) {
@@ -14,11 +13,9 @@ export class AdjacencyList<Node extends NodeBase, Edge extends EdgeBase<Node>> {
             visualize?.currentEdge(edge);
             if (!this.adjacencyList[edge.from.id]) {
                 this.adjacencyList[edge.from.id] = [];
-                this.count += 1;
             }
             if (!this.adjacencyList[edge.to.id]) {
                 this.adjacencyList[edge.to.id] = [];
-                this.count += 1;
             }
     
             this.adjacencyList[edge.from.id]!.push(edge);
@@ -34,7 +31,6 @@ export class AdjacencyList<Node extends NodeBase, Edge extends EdgeBase<Node>> {
             visualize?.currentEdge(edge);
             if (!this.adjacencyList[edge.from.id]) {
                 this.adjacencyList[edge.from.id] = [];
-                this.count += 1;
             }
             this.adjacencyList[edge.from.id]!.push(edge);
 
@@ -47,7 +43,6 @@ export class AdjacencyList<Node extends NodeBase, Edge extends EdgeBase<Node>> {
         if (!departingEdges) return;
 
         this.adjacencyList[node.id] = undefined;
-        this.count -= 1;
 
         for (const edge of departingEdges) {
             const other = edge.from === node ? edge.to : edge.from;
@@ -56,7 +51,6 @@ export class AdjacencyList<Node extends NodeBase, Edge extends EdgeBase<Node>> {
                 if (otherDeparting.length === 1) {
                     assert(otherDeparting[0] === edge, "Malformed adjacency list");
                     this.adjacencyList[other.id] = undefined;
-                    this.count -= 1;
                 } else {
                     const index = otherDeparting.indexOf(edge);
                     assert(index !== -1, "Malformed adjacency list");
@@ -65,8 +59,6 @@ export class AdjacencyList<Node extends NodeBase, Edge extends EdgeBase<Node>> {
             }
         }
     }
-
-    empty() { return this.count === 0; }
 
     has(node: Node) { return !!this.adjacencyList[node.id]; }
 
