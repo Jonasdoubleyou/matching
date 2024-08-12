@@ -26,19 +26,22 @@ export const PathGrowingMatcher: Matcher = function* PathGrowingMatcher(input: R
     visualize?.data("adjacency list", adjacencyList.adjacencyList);
 
     visualize?.step("1. Build adjacency list O(|E|)");
-    yield* adjacencyList.fill(input.edges, visualize);
+    yield* adjacencyList.fill(input, visualize);
 
     visualize?.step("2. Build paths O(|E|)");
     visualize?.message("Pick random node");
 
-    while(!adjacencyList.empty()) {
+    for (let currentNode of input.nodes) {
         visualize?.message("Pick random node")
-        let currentNode = adjacencyList.popNode();
         while(true) {
             visualize?.currentNode(currentNode);
             yield;
 
             const departingEdges = adjacencyList.edgesOf(currentNode)!;
+            if (departingEdges.length === 0) {
+                break;
+            }
+
             const heaviestEdge = departingEdges.reduce((a, b) => a.weight > b.weight ? a : b);
             visualize?.currentEdge(heaviestEdge);
             yield;

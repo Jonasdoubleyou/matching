@@ -22,10 +22,10 @@ export const NaiveMatcher: Matcher = function* GreedyMatcher(input: ReadonlyGrap
     const adjacencyList = new AdjacencyList();
     visualize?.data("Adjacency List", adjacencyList.adjacencyList);
     
-    yield* adjacencyList.fillForward(input.edges, visualize);
+    yield* adjacencyList.fillForward(input, visualize);
 
     const flattenedList = [...adjacencyList.entries()];
-    const usedNodes = new Set<NodeBase>();
+    const usedNodes = new Array<boolean>(input.nodes.length);
     
     function *iterate(index: number, solution: EdgeBase[]): Generator<EdgeBase[], void, void> {
         if (index >= flattenedList.length) {
@@ -36,28 +36,28 @@ export const NaiveMatcher: Matcher = function* GreedyMatcher(input: ReadonlyGrap
         yield* iterate(index + 1, solution);
 
 
-        const [fromNode, edges] =  flattenedList[index];
-        if (usedNodes.has(fromNode)) {
+        const { node: fromNode, edges } =  flattenedList[index];
+        if (usedNodes[fromNode.id]) {
             return;
         }
 
-        usedNodes.add(fromNode);   
+        usedNodes[fromNode.id] = true;   
         
         for (const edge of edges) {
-            if (usedNodes.has(edge.to)) continue;
+            if (usedNodes[edge.to.id]) continue;
 
             solution.push(edge);
 
-            const addTo = !usedNodes.has(edge.to);
-            if (addTo) usedNodes.add(edge.to);
+            const addTo = !usedNodes[edge.to.id];
+            if (addTo) usedNodes[edge.to.id] = true;
         
             yield* iterate(index + 1, solution);
             
             solution.pop();
-            if (addTo) usedNodes.delete(edge.to);
+            if (addTo) usedNodes[edge.to.id] = false;
         }
 
-        usedNodes.delete(fromNode);
+        usedNodes[fromNode.id] = false;
     }
 
     let bestSolution: Matching = [];

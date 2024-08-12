@@ -1,49 +1,62 @@
-import { EdgeBase, NodeBase, Visualizer } from "../algo";
+import { EdgeBase, NodeBase, ReadonlyGraph, Visualizer } from "../algo";
 import { assert } from "../util/assert";
 
 // Compact representation of a graph as an adjacency list
 export class AdjacencyList<Node extends NodeBase, Edge extends EdgeBase<Node>> {
-    adjacencyList: Map<Node, Edge[]> = new Map();
-    
-    *fill(edges: readonly Readonly<Edge>[], visualize?: Visualizer) {
-        for (const edge of edges) {
+    adjacencyList: (Readonly<Edge>[] | undefined)[] = [];
+    count = 0;
+    graph?: ReadonlyGraph;
+
+    *fill(graph: ReadonlyGraph<Node, Edge>, visualize?: Visualizer) {
+        this.graph = graph;
+
+        for (const edge of graph.edges) {
             visualize?.currentEdge(edge);
-            if (!this.adjacencyList.has(edge.from)) {
-                this.adjacencyList.set(edge.from, []);
+            if (!this.adjacencyList[edge.from.id]) {
+                this.adjacencyList[edge.from.id] = [];
+                this.count += 1;
             }
-            if (!this.adjacencyList.has(edge.to)) {
-                this.adjacencyList.set(edge.to, []);
+            if (!this.adjacencyList[edge.to.id]) {
+                this.adjacencyList[edge.to.id] = [];
+                this.count += 1;
             }
     
-            this.adjacencyList.get(edge.from)?.push(edge);
-            this.adjacencyList.get(edge.to)?.push(edge);
+            this.adjacencyList[edge.from.id]!.push(edge);
+            this.adjacencyList[edge.to.id]!.push(edge);
             yield;
         }
     }
 
-    *fillForward(edges: readonly Readonly<Edge>[], visualize?: Visualizer) {
-        for (const edge of edges) {
+    *fillForward(graph: ReadonlyGraph<Node, Edge>, visualize?: Visualizer) {
+        this.graph = graph;
+
+        for (const edge of graph.edges) {
             visualize?.currentEdge(edge);
-            if (!this.adjacencyList.has(edge.from)) {
-                this.adjacencyList.set(edge.from, []);
+            if (!this.adjacencyList[edge.from.id]) {
+                this.adjacencyList[edge.from.id] = [];
+                this.count += 1;
             }
-            this.adjacencyList.get(edge.from)!.push(edge);
+            this.adjacencyList[edge.from.id]!.push(edge);
 
             yield;
         }
     }
 
     *remove(node: Node) {
-        const departingEdges = this.edgesOf(node);
-        this.adjacencyList.delete(node);
-        
+        const departingEdges = this.adjacencyList[node.id];
+        if (!departingEdges) return;
+
+        this.adjacencyList[node.id] = undefined;
+        this.count -= 1;
+
         for (const edge of departingEdges) {
             const other = edge.from === node ? edge.to : edge.from;
-            const otherDeparting = this.adjacencyList.get(other);
+            const otherDeparting = this.adjacencyList[other.id];
             if (otherDeparting) {
                 if (otherDeparting.length === 1) {
                     assert(otherDeparting[0] === edge, "Malformed adjacency list");
-                    this.adjacencyList.delete(other);
+                    this.adjacencyList[other.id] = undefined;
+                    this.count -= 1;
                 } else {
                     const index = otherDeparting.indexOf(edge);
                     assert(index !== -1, "Malformed adjacency list");
@@ -53,19 +66,19 @@ export class AdjacencyList<Node extends NodeBase, Edge extends EdgeBase<Node>> {
         }
     }
 
-    has(node: Node) { return this.adjacencyList.has(node); }
-    empty() { return this.adjacencyList.size === 0; }
+    empty() { return this.count === 0; }
+
+    has(node: Node) { return !!this.adjacencyList[node.id]; }
 
     edgesOf(node: Node) {
-        return this.adjacencyList.get(node) ?? [];
+        return this.adjacencyList[node.id] ?? [];
     }
 
-    popNode(): Node {
-        return this.adjacencyList.keys().next().value!;
-    }
-
-    entries() {
-        return this.adjacencyList.entries();
+    *entries() {
+        for (const [nodeID, edges] of this.adjacencyList.entries()) {
+            if (!edges || !edges.length) continue;
+            yield { node: this.graph!.nodes[nodeID], edges };
+        }
     }
 
     values() {
