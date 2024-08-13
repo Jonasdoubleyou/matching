@@ -54,6 +54,15 @@ export const missions: Mission[] = [
         bestScore: 2
     },
     {
+        name: "Triangle",
+        input: buildGraph(3, node => ([
+            { from: node[0], to: node[1], weight: 1 },
+            { from: node[1], to: node[2], weight: 1 },
+            { from: node[0], to: node[2], weight: 10 },
+        ])),
+        bestScore: 10
+    },
+    {
         name: "Circle",
         input: buildGraph(4, node => ([
             { from: node[0], to: node[1], weight: 1 },
@@ -80,7 +89,42 @@ export const missions: Mission[] = [
             { from: node[2], to: node[3], weight: 1 },
             { from: node[3], to: node[4], weight: 9 },        
         ])),
+        bestScore: 19,
+    },
+    {
+        name: "5 edge path",
+        input: buildGraph(6, node => ([
+            { from: node[0], to: node[1], weight: 10 },
+            { from: node[1], to: node[2], weight: 1 },
+            { from: node[2], to: node[3], weight: 1 },
+            { from: node[3], to: node[4], weight: 9 },
+            { from: node[4], to: node[5], weight: 9 },        
+        ])),
         bestScore: 20,
+    },
+    {
+        name: "6 edge path",
+        input: buildGraph(7, node => ([
+            { from: node[0], to: node[1], weight: 10 },
+            { from: node[1], to: node[2], weight: 1 },
+            { from: node[2], to: node[3], weight: 2 },
+            { from: node[3], to: node[4], weight: 9 },
+            { from: node[4], to: node[5], weight: 9 },
+            { from: node[5], to: node[6], weight: 2 },        
+        ])),
+        bestScore: 21,
+    },
+    {
+        name: "Tree",
+        input: buildGraph(7, node => ([
+            { from: node[0], to: node[1], weight: 10 },
+            { from: node[0], to: node[2], weight: 1 },
+            { from: node[2], to: node[3], weight: 1 },
+            { from: node[2], to: node[4], weight: 9 },
+            { from: node[1], to: node[5], weight: 9 },
+            { from: node[1], to: node[6], weight: 2 },        
+        ])),
+        bestScore: 19,
     },
     {
         name: "Eight",
@@ -92,7 +136,24 @@ export const missions: Mission[] = [
             { from: node[0], to: node[4], weight: 5 },
             { from: node[1], to: node[5], weight: 5 },
             { from: node[4], to: node[5], weight: 5 }    
-        ]))
+        ])),
+        bestScore: 15
+    },
+    {
+        name: "Three Loops",
+        input: buildGraph(8, node => ([
+            { from: node[0], to: node[1], weight: 10 },
+            { from: node[1], to: node[2], weight: 0 },
+            { from: node[2], to: node[3], weight: 0 },
+            { from: node[3], to: node[0], weight: 8 },
+            { from: node[0], to: node[4], weight: 5 },
+            { from: node[1], to: node[5], weight: 5 },
+            { from: node[4], to: node[5], weight: 5 },
+            { from: node[0], to: node[6], weight: 5 },
+            { from: node[1], to: node[7], weight: 5 },
+            { from: node[6], to: node[7], weight: 5 }   
+        ])),
+        bestScore: 20
     },
     {
         name: "Three loose Edges",
@@ -100,6 +161,7 @@ export const missions: Mission[] = [
             { from: node[0], to: node[1], weight: 10 },
             { from: node[2], to: node[3], weight: 10 },
             { from: node[4], to: node[5], weight: 9 }, 
-        ]))
+        ])),
+        bestScore: 29
     }
 ];
