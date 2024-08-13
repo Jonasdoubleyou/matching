@@ -112,7 +112,7 @@ const benchmarks: Benchmark[] = [
 
     {
         name: "Growing number of edges / Interconnected",
-        matchers: ["BlossomMatcher", "GreedyMatcher", "PathGrowingMatcher", "PathGrowingPatchedMatcher"],
+        matchers: ["BlossomMatcher", "GreedyMatcher", "PathGrowingMatcher", "PathGrowingPatchedMatcher", "TreeGrowingMatcher"],
         runs: [
             {
                 name: "60% edge rate",
