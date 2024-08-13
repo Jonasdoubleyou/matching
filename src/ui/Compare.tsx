@@ -362,24 +362,6 @@ export function CompareUI({ exit }: { exit: () => void }) {
             }} />}
             </Column>
 
-            <Column grow>
-            <h2>Steps</h2>
-            {results.length > 0 && <Graph data={{ datasets: matcherNames.map(matcher => ({
-                label: matcher,
-                data: results.filter(it => it.matcher === matcher).map(it => ({ x: it.benchmarkRun.name, y: it.steps })),
-             })).filter(it => it.data.length) }} options={{
-                scales: {
-                    x: {
-                      type: 'category',
-                    },
-                    y: {
-                        type: 'linear',
-                        position: 'left',
-                        beginAtZero: false
-                      }
-                  }
-            }} />}
-            </Column>
             
             <Spacer />
         </Row>
