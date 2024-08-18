@@ -21,6 +21,7 @@ interface Benchmark {
     name: string;
     runs: BenchmarkRun[];
     matchers: MatcherName[];
+    runtimeScale?: "linear" | "logarithmic";
 }
 
 const benchmarks: Benchmark[] = [
@@ -77,6 +78,7 @@ const benchmarks: Benchmark[] = [
     {
         name: "Growing number of edges (small)",
         matchers: matcherNames,
+        runtimeScale: "logarithmic",
         runs: [
             {
                 name: "10% edge rate",
@@ -107,7 +109,7 @@ const benchmarks: Benchmark[] = [
                 repeat: 1
             }
 
-        ]
+        ],
     },
 
     {
@@ -144,7 +146,58 @@ const benchmarks: Benchmark[] = [
             }
 
         ]
-    }
+    },
+
+
+    {
+        name: "Sparse - Path Growing",
+        matchers: ["PathGrowingMatcher", "PathGrowingPatchedMatcher"],
+        runs: [
+            {
+                name: "1% edge rate",
+                nodeCount: 100,
+                edgeRate: 1,
+                randomRepeat: 5,
+                repeat: 1
+            },
+            {
+                name: "2% edge rate",
+                nodeCount: 100,
+                edgeRate: 2,
+                randomRepeat: 5,
+                repeat: 1
+            },
+            {
+                name: "3% edge rate",
+                nodeCount: 100,
+                edgeRate: 3,
+                randomRepeat: 5,
+                repeat: 1
+            },
+            {
+                name: "4% edge rate",
+                nodeCount: 100,
+                edgeRate: 4,
+                randomRepeat: 5,
+                repeat: 1
+            },
+            {
+                name: "5% edge rate",
+                nodeCount: 100,
+                edgeRate: 5,
+                randomRepeat: 5,
+                repeat: 1
+            },
+            {
+                name: "10% edge rate",
+                nodeCount: 100,
+                edgeRate: 10,
+                randomRepeat: 5,
+                repeat: 1
+            },
+
+        ]
+    },
 ];
 
 type Measure = { mean: number, stdDeviation: number };
@@ -354,7 +407,7 @@ export function CompareUI({ exit }: { exit: () => void }) {
                       type: 'category',
                     },
                     y: {
-                        type: 'linear',
+                        type: benchmark?.runtimeScale ?? "linear",
                         position: 'left',
                         beginAtZero: false
                       }

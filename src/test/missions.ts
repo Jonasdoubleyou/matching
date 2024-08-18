@@ -127,6 +127,16 @@ export const missions: Mission[] = [
         bestScore: 19,
     },
     {
+        name: "Small Tree",
+        input: buildGraph(5, node => ([
+            { from: node[0], to: node[1], weight: 2 },
+            { from: node[1], to: node[2], weight: 1 },
+            { from: node[0], to: node[3], weight: 4 },
+            { from: node[3], to: node[4], weight: 5 }
+        ])),
+        bestScore: 7
+    },
+    {
         name: "Eight",
         input: buildGraph(6, node => ([
             { from: node[0], to: node[1], weight: 10 },

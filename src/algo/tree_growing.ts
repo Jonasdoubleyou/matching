@@ -103,8 +103,8 @@ export const TreeGrowingMatcher: Matcher = function* PathGrowingMatcher(input: R
                 visualize?.step(`Augment to add edge ${edge.from.id} - ${edge.to.id}`);
                 // Augment previously picked edge
                 if (picked[node.id]) {
-                    // TODO: Here we could potentially undo the augmentation that was done to add
-                    // the previous subtree
+                    // Here we could potentially undo the augmentation that was done to add
+                    // the previous subtree - but I think this cannot be beneficial as we sort edges
                     visualize?.pickEdge(picked[node.id]!, null);
                 }
 
