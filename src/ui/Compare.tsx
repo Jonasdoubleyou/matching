@@ -7,6 +7,69 @@ import { Chart, registerables } from 'chart.js';
 import { Bar, Scatter } from "react-chartjs-2";
 Chart.register(...registerables);
 
+// Prevent overlaps in the Scatter chart
+// c.f. https://stackoverflow.com/questions/57732359/chartjs-handling-of-overlapping-points-in-line-chart
+Chart.register({
+    id: 'jitterEffects',
+    beforeDatasetDraw: function (ctx, args) {
+        var _args = args,
+            dataIndex = _args.index,
+            meta = _args.meta;
+        var points = meta.data.map(function (el) {
+            return {
+                x: el.x,
+                y: el.y
+            };
+        });
+        var dsLength = ctx.data.datasets.length;
+        var adjustedMap = []; // keeps track of adjustments to prevent double offsets
+
+        for (var datasetIndex = 0; datasetIndex < dsLength; datasetIndex += 1) {
+            if (dataIndex !== datasetIndex) {
+                var datasetMeta = ctx.getDatasetMeta(datasetIndex);
+                for (const el of datasetMeta.data) {
+                    var overlapFilter = points.filter(function (point) {
+                        return point.x === el.x && point.y === el.y;
+                    });
+
+                    var overlap = false;
+                    var overObj = JSON.parse(JSON.stringify(overlapFilter));
+                    for (var i = 0; i < overObj.length; i++) {
+                        if(overObj[i]['x'] === el.x && overObj[i]['y'] === el.y){
+                            overlap = true;
+                            break;
+                        }
+                    }
+                    if (overlap) {
+                        var adjusted = false;
+                        var adjustedFilter = adjustedMap.filter(function (item) {
+                            return item.datasetIndex === datasetIndex && item.dataIndex === dataIndex;
+                        });
+                        var adjObj = JSON.parse(JSON.stringify(adjustedFilter));
+                        for (var i = 0; i < adjObj.length; i++) {
+                            if(adjObj[i]['datasetIndex'] === datasetIndex && adjObj[i]['dataIndex'] === dataIndex){
+                                adjusted = true;
+                                break;
+                            }
+                        }
+
+                        if (!adjusted && datasetIndex % 2) {
+                            el.x += 7;
+                        } else {
+                            el.x -= 7;
+                        }
+
+                        adjustedMap.push({
+                            datasetIndex: datasetIndex,
+                            dataIndex: dataIndex
+                        });
+                    }
+                }
+            }
+        }
+    }
+});
+
 const Graph = Scatter;
 
 interface BenchmarkRun {
@@ -151,36 +214,8 @@ const benchmarks: Benchmark[] = [
 
     {
         name: "Sparse - Path Growing",
-        matchers: ["PathGrowingMatcher", "PathGrowingPatchedMatcher"],
+        matchers: ["PathGrowingMatcher", "PathGrowingPatchedMatcher", "BlossomMatcher"],
         runs: [
-            {
-                name: "1% edge rate",
-                nodeCount: 100,
-                edgeRate: 1,
-                randomRepeat: 5,
-                repeat: 1
-            },
-            {
-                name: "2% edge rate",
-                nodeCount: 100,
-                edgeRate: 2,
-                randomRepeat: 5,
-                repeat: 1
-            },
-            {
-                name: "3% edge rate",
-                nodeCount: 100,
-                edgeRate: 3,
-                randomRepeat: 5,
-                repeat: 1
-            },
-            {
-                name: "4% edge rate",
-                nodeCount: 100,
-                edgeRate: 4,
-                randomRepeat: 5,
-                repeat: 1
-            },
             {
                 name: "5% edge rate",
                 nodeCount: 100,
@@ -195,7 +230,48 @@ const benchmarks: Benchmark[] = [
                 randomRepeat: 5,
                 repeat: 1
             },
-
+            {
+                name: "15% edge rate",
+                nodeCount: 100,
+                edgeRate: 15,
+                randomRepeat: 5,
+                repeat: 1
+            },
+            {
+                name: "20% edge rate",
+                nodeCount: 100,
+                edgeRate: 20,
+                randomRepeat: 5,
+                repeat: 1
+            },
+            {
+                name: "25% edge rate",
+                nodeCount: 100,
+                edgeRate: 25,
+                randomRepeat: 5,
+                repeat: 1
+            },
+            {
+                name: "30% edge rate",
+                nodeCount: 100,
+                edgeRate: 30,
+                randomRepeat: 5,
+                repeat: 1
+            },
+            {
+                name: "35% edge rate",
+                nodeCount: 100,
+                edgeRate: 35,
+                randomRepeat: 5,
+                repeat: 1
+            },
+            {
+                name: "40% edge rate",
+                nodeCount: 100,
+                edgeRate: 40,
+                randomRepeat: 5,
+                repeat: 1
+            },
         ]
     },
 ];
