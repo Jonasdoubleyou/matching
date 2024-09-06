@@ -177,32 +177,32 @@ const benchmarks: Benchmark[] = [
 
     {
         name: "Growing number of edges / Interconnected",
-        matchers: ["BlossomMatcher", "GreedyMatcher", "PathGrowingMatcher", "PathGrowingPatchedMatcher", "TreeGrowingMatcher"],
+        matchers: ["BlossomMatcher", "GreedyMatcher", "PathGrowingPatchedMatcher", "TreeGrowingMatcher"],
         runs: [
             {
                 name: "60% edge rate",
-                nodeCount: 100,
+                nodeCount: 200,
                 edgeRate: 60,
                 randomRepeat: 20,
                 repeat: 1
             },
             {
                 name: "70% edge rate",
-                nodeCount: 100,
+                nodeCount: 200,
                 edgeRate: 70,
                 randomRepeat: 20,
                 repeat: 1
             },
             {
                 name: "80% edge rate",
-                nodeCount: 100,
+                nodeCount: 200,
                 edgeRate: 80,
                 randomRepeat: 20,
                 repeat: 1
             },
             {
                 name: "100% edge rate",
-                nodeCount: 100,
+                nodeCount: 200,
                 edgeRate: 100,
                 randomRepeat: 20,
                 repeat: 1
@@ -211,6 +211,82 @@ const benchmarks: Benchmark[] = [
         ]
     },
 
+    {
+        name: "Growing number of nodes, 50% edge rate",
+        matchers: ["BlossomMatcher", "GreedyMatcher", "PathGrowingMatcher", "PathGrowingPatchedMatcher", "TreeGrowingMatcher"],
+        runs: [
+            {
+                name: "200 nodes",
+                nodeCount: 200,
+                edgeRate: 50,
+                randomRepeat: 10,
+                repeat: 1
+            },
+            {
+                name: "400 nodes",
+                nodeCount: 400,
+                edgeRate: 50,
+                randomRepeat: 10,
+                repeat: 1
+            },
+            {
+                name: "600 nodes",
+                nodeCount: 600,
+                edgeRate: 50,
+                randomRepeat: 10,
+                repeat: 1
+            },
+            {
+                name: "800 nodes",
+                nodeCount: 800,
+                edgeRate: 50,
+                randomRepeat: 10,
+                repeat: 1
+            },
+        ]
+    },
+
+    {
+        name: "Overhead of iterators",
+        matchers: ["BlossomMatcher", "TreeGrowingMatcher", "TreeGrowingSyncMatcher"],
+        runs: [
+            {
+                name: "50 nodes",
+                nodeCount: 50,
+                edgeRate: 50,
+                randomRepeat: 10,
+                repeat: 1
+            },
+            {
+                name: "100 nodes",
+                nodeCount: 100,
+                edgeRate: 50,
+                randomRepeat: 10,
+                repeat: 1
+            },
+            {
+                name: "150 nodes",
+                nodeCount: 150,
+                edgeRate: 50,
+                randomRepeat: 10,
+                repeat: 1
+            },
+            {
+                name: "200 nodes",
+                nodeCount: 200,
+                edgeRate: 50,
+                randomRepeat: 10,
+                repeat: 1
+            },
+            {
+                name: "250 nodes",
+                nodeCount: 250,
+                edgeRate: 50,
+                randomRepeat: 10,
+                repeat: 1
+            },
+        ]
+    },
 
     {
         name: "Sparse - Path Growing",
@@ -278,7 +354,7 @@ const benchmarks: Benchmark[] = [
 
 type Measure = { mean: number, stdDeviation: number };
 
-type BenchmarkResult = RunResult & { matcher: MatcherName, benchmarkRun: BenchmarkRun, performanceRatio: number };
+type BenchmarkResult = RunResult & { run: number, matcher: MatcherName, benchmarkRun: BenchmarkRun, performanceRatio: number };
 
 interface AggregatedRunResult {
     benchmarkRun: BenchmarkRun;
@@ -343,6 +419,7 @@ export function CompareUI({ exit }: { exit: () => void }) {
 
                             const result = {
                                 ...data,
+                                run: repeat + benchmarkRun.repeat * randomRepeat,
                                 matcher: matcherName,
                                 benchmarkRun
                             };
@@ -458,7 +535,7 @@ export function CompareUI({ exit }: { exit: () => void }) {
             <h2>Performance Ratio</h2>
             {results.length > 0 && <Graph data={{ datasets: matcherNames.map(matcher => ({
                 label: matcher,
-                data: results.filter(it => it.matcher === matcher).map(it => ({ x: it.benchmarkRun.name, y: it.performanceRatio })),
+                data: results.filter(it => it.matcher === matcher).map(it => ({ x: it.benchmarkRun.name + " " + it.run, y: it.performanceRatio })),
              })).filter(it => it.data.length) }} options={{
                 scales: {
                     x: {
@@ -476,7 +553,7 @@ export function CompareUI({ exit }: { exit: () => void }) {
             <h2>Runtime</h2>
             {results.length > 0 && <Graph data={{ datasets: matcherNames.map(matcher => ({
                 label: matcher,
-                data: results.filter(it => it.matcher === matcher).map(it => ({ x: it.benchmarkRun.name, y: it.runtime })),
+                data: results.filter(it => it.matcher === matcher).map(it => ({ x: it.benchmarkRun.name,  y: it.runtime })),
              })).filter(it => it.data.length) }} options={{
                 scales: {
                     x: {
