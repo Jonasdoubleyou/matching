@@ -4,6 +4,7 @@ import { NaiveMatcher } from "./naive";
 import { BlossomMatcher } from "./blossom";
 import { PathGrowingPatchedMatcher } from "./path_growing_patched";
 import { TreeGrowingMatcher } from "./tree_growing";
+import { TreeGrowingSyncMatcher } from "./tree_growing_sync";
 
 export * from "./base";
 export { GreedyMatcher } from "./greedy";
@@ -15,7 +16,8 @@ export const matchers = {
     PathGrowingPatchedMatcher,
     NaiveMatcher,
     BlossomMatcher,
-    TreeGrowingMatcher
+    TreeGrowingMatcher,
+    TreeGrowingSyncMatcher
 } as const;
 
 export type MatcherName = keyof typeof matchers;
